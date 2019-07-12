@@ -5,18 +5,23 @@ using UnityEditor;
 
 public class NodeCreator : EditorWindow {
 	List<Node> lst_Node = new List<Node> ();
-	List<NodeLink> lst_Link = new List<NodeLink> ();
 	Node End = null;
 	Node SelectNode = null;
 	Vector2 coordinate;
 
 	GUISkin mySkin;
-	Texture2D bgTexture;
+	GUIStyle nameStyle, titleStyle;
+	Texture2D tex_bg, tex_left, tex_add;
 	Texture2D[] tex_arrows = new Texture2D[4];
+	Rect rect_left, rect_titleL;
 	Vector2 arrowSize = new Vector2(10, 10);
+
 	enum DropdownType{close, normal, select};
 	DropdownType dType = DropdownType.close;
+
+	List<Character> lst_characters = new List<Character> ();
 	bool linking = false;
+	int downButton = -1;
 
 	[MenuItem("Window/Node Creator")]
 	static void Init(){
@@ -29,13 +34,25 @@ public class NodeCreator : EditorWindow {
 
 	void OnEnable(){
 		mySkin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
-		bgTexture = Resources.Load<Texture2D> ("GUISkin/Grid4");
+		nameStyle = mySkin.GetStyle ("charName");
+		titleStyle = mySkin.GetStyle ("panelTitle");
+		tex_bg = Resources.Load<Texture2D> ("GUISkin/Grid4");
+		tex_add = Resources.Load<Texture2D> ("GUISkin/AddIcon");
+		tex_left = new Texture2D (1, 1);
+		tex_left.SetPixel (0, 0, new Color (0, 0, 0, 0.2f));
+		tex_left.Apply ();
 		tex_arrows [0] = Resources.Load<Texture2D> ("GUISkin/ArrowD");
 		tex_arrows [1] = Resources.Load<Texture2D> ("GUISkin/ArrowU");
 		tex_arrows [2] = Resources.Load<Texture2D> ("GUISkin/ArrowR");
 		tex_arrows [3] = Resources.Load<Texture2D> ("GUISkin/ArrowL");
+		rect_left = new Rect (0, 0, 120, 90);
+		rect_titleL = new Rect (10, 10, 100, 30);
 		coordinate = Vector2.zero;
 		CreateStartNode ();
+
+		//test
+		lst_characters.Add(new Character("羅大佑"));
+		lst_characters.Add(new Character("盧卡斯"));
 	}
 
 	void OnGUI(){
@@ -46,6 +63,8 @@ public class NodeCreator : EditorWindow {
 		DrawConnect ();
 
 		DrawNodes ();
+
+		DrawLeftPanel ();
 
 		if (GUI.changed)
 			Repaint ();
@@ -60,7 +79,7 @@ public class NodeCreator : EditorWindow {
 			int j = -1;
 			while ((j-1) * 120 < position.height) {
 				Rect bgRect = new Rect (i * 120 + xOffSet, j * 120 + yOffset, 120, 120);
-				GUI.DrawTexture (bgRect, bgTexture);
+				GUI.DrawTexture (bgRect, tex_bg);
 				j++;
 			}
 			i++;
@@ -68,74 +87,15 @@ public class NodeCreator : EditorWindow {
 	}
 
 	void DrawConnect(){
-		foreach (Node n in lst_Node) {
-			if (n.NextNode.Count > 0) {
-				foreach (Node nn in n.NextNode)
-					Link (n.canvasRect, nn.canvasRect);
-			}
-		}
-	}
-
-	void Link(Rect rectA, Rect rectB){
-		Vector2 pointA = rectA.center;
-		Vector2 pointB = rectB.center;
-		float dWidth = Mathf.Abs (pointA.x - pointB.x);
-
-		if (Mathf.Abs (pointA.y - pointB.y) < 56) {
-			if (dWidth < 158)
-				return;
-			if (pointA.x < pointB.x) {
-				pointA.x = rectA.xMax - 5;
-				pointB.x = rectB.xMin + 5;
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (-13, -5), arrowSize), tex_arrows [2]);
-			} else {
-				pointA.x = rectA.xMin + 5;
-				pointB.x = rectB.xMax - 5;
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (3, -5), arrowSize), tex_arrows [3]);
-			}
-			Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
-
-		} else if (pointA.y < pointB.y) {
-			pointA.y = rectA.yMax - 4;
-			pointB.y = rectB.yMin + 4;
-
-			if (dWidth < 5)
-				Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
-			else {
-				Vector2 tan0 = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 20f, pointA.y + 15f, 99999));
-				Vector2 tan1 = new Vector2 (pointB.x + 0.06f * dWidth, Mathf.Clamp (pointB.y - 80f, pointA.y - 15f, 99999));
-				Vector2 pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 90f, pointA.y, 99999));
-				if (pointC.y - pointA.y >= 1f)
-					Handles.DrawBezier (pointA, pointC, pointA, pointC, Color.white, null, 2f);
-				Handles.DrawBezier (pointC, pointB, tan0, tan1, Color.white, null, 2f);
-			}
-
-			GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, -12), arrowSize), tex_arrows [0]);
-
-		} else {
-			pointA.y = rectA.yMin + 4;
-			pointB.y = rectB.yMax - 4;
-			if (dWidth < 5)
-				Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
-			else {
-				Vector2 tan0 = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 20f, -99999, pointA.y - 15f));
-				Vector2 tan1 = new Vector2 (pointB.x + 0.06f * dWidth, Mathf.Clamp (pointB.y + 80f, -99999, pointA.y + 15f));
-				Vector2 pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 90f, -99999, pointA.y));
-				if (pointA.y - pointC.y >= 1f)
-					Handles.DrawBezier (pointA, pointC, pointA, pointC, Color.white, null, 2f);
-				Handles.DrawBezier (pointC, pointB, tan0, tan1, Color.white, null, 2f);
-			}
-
-			GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, 2), arrowSize), tex_arrows [1]);
-		}
-
+		foreach (Node n in lst_Node)
+			n.DrawMyLink ();
 	}
 
 	void Link(Rect rectA, Vector2 pointB){
 		Vector2 pointA = rectA.center;
 		float dWidth = Mathf.Abs (pointA.x - pointB.x);
 
-		if (Mathf.Abs (pointA.y - pointB.y) < 34) {
+		if (Mathf.Abs (pointA.y - pointB.y) < 56) {
 			if (dWidth < 80)
 				return;
 			if (pointA.x < pointB.x) {
@@ -150,23 +110,11 @@ public class NodeCreator : EditorWindow {
 
 		} else if (pointA.y < pointB.y) {
 			pointA.y = rectA.yMax - 4;
-			Vector2 tan0 = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 20f, pointA.y + 15f, 99999));
-			Vector2 tan1 = new Vector2 (pointB.x + 0.06f * dWidth, Mathf.Clamp (pointB.y - 80f, pointA.y - 15f, 99999));
-			Vector2 pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 90f, pointA.y, 99999));
-
-			if (pointC.y - pointA.y >= 1f)
-				Handles.DrawBezier (pointA, pointC, pointA, pointC, Color.white, null, 2f);
-			Handles.DrawBezier (pointC, pointB, tan0, tan1, Color.white, null, 2f);
+			Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
 			GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, -12), arrowSize), tex_arrows [0]);
 		} else {
 			pointA.y = rectA.yMin + 4;
-			Vector2 tan0 = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 20f, -99999, pointA.y - 15f));
-			Vector2 tan1 = new Vector2 (pointB.x + 0.06f * dWidth, Mathf.Clamp (pointB.y + 80f, -99999, pointA.y + 15f));
-			Vector2 pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 90f, -99999, pointA.y));
-
-			if (pointA.y - pointC.y >= 1f)
-				Handles.DrawBezier (pointA, pointC, pointA, pointC, Color.white, null, 2f);
-			Handles.DrawBezier (pointC, pointB, tan0, tan1, Color.white, null, 2f);
+			Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
 			GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, 2), arrowSize), tex_arrows [1]);
 		}
 	}
@@ -186,10 +134,30 @@ public class NodeCreator : EditorWindow {
 		}
 	}
 
+	void DrawLeftPanel(){
+		rect_left.height = 75 + 20 * lst_characters.Count;
+		GUI.DrawTexture (rect_left, tex_left);
+		GUI.Label (rect_titleL, "Character List", titleStyle);
+
+		int i;
+		for (i = 0; i < lst_characters.Count; i++) {
+			GUI.DrawTexture (new Rect (10, 44 + i * 24, 15, 4), lst_characters [i].tex);
+			GUI.Label (new Rect (32, 40 + i * 24, 105, 20), lst_characters [i].name, nameStyle);
+		}
+
+		GUI.DrawTexture (new Rect (10, 45 + i * 24, 12, 12), tex_add);
+		GUI.Label (new Rect (28, 40 + i * 24, 105, 20), "Add New", mySkin.GetStyle ("label"));
+	}
+
 	void ProcessEvent(Event e){
 		DropdownMenu (e);
 		dType = DropdownType.close;
 
+		if (e.type == EventType.MouseUp) {
+			downButton = -1;
+			return;
+		}
+			
 		if (linking) {
 			Vector2 mousePos = e.mousePosition;
 			Link (SelectNode.canvasRect, mousePos);
@@ -200,17 +168,20 @@ public class NodeCreator : EditorWindow {
 				Node originNode = SelectNode;
 				if (ClickCheck (mousePos))
 					SelectNode.SetConnect (originNode);
-				
+
+				downButton = -1;
 				linking = false;
 				ResetSelect ();
 			}
 		} else {
 			switch(e.type){
 			case EventType.MouseDown:
-				if (e.button == 0) {
+				downButton = e.button;
+
+				if (downButton == 0) {
 					ClickCheck (e.mousePosition);
-				} else if (e.button == 1) {
-					if (ClickCheck(e.mousePosition))
+				} else if (downButton == 1) {
+					if (ClickCheck (e.mousePosition))
 						dType = DropdownType.select;
 					else
 						dType = DropdownType.normal;
@@ -219,14 +190,12 @@ public class NodeCreator : EditorWindow {
 
 
 			case EventType.MouseDrag:
-				if (SelectNode != null) {
-					SelectNode.FollowMouse (e.delta);
-				}else {
+				if (downButton == 2 || (downButton != -1 && SelectNode == null)) {
 					coordinate += e.delta;
 					GUI.changed = true;
+				}else if(SelectNode != null){
+					SelectNode.FollowMouse (e.delta);
 				}
-
-
 				break;
 			case EventType.KeyDown:
 				if (e.keyCode == KeyCode.Space) {
@@ -310,17 +279,18 @@ public class NodeCreator : EditorWindow {
 	}
 
 	void CreateStartNode(){
-		Node n = new StartNode (new Vector2 (60, 100), "", null);
+		Node n = new StartNode (new Vector2 (120, 150), "", null);
 		lst_Node.Add (n);
 	}
 
 	void CreateNode(bool isChild){
 		Node n;
 		if (isChild) {
-			n = new Node (SelectNode.rect.position + new Vector2 (SelectNode.NextNode.Count * 180, 100), "Dialog" + lst_Node.Count.ToString (), mySkin, SelectNode);
+			n = new Node (SelectNode.rect.position + new Vector2 (0, 100), "Dialog" + lst_Node.Count.ToString (), mySkin);
+			n.SetConnect (SelectNode);
 		}else{
 			Node lastNode = lst_Node[lst_Node.Count - 1];
-			n = new Node (lastNode.rect.position + 100 * Vector2.up, "Dialog" + lst_Node.Count.ToString (), mySkin, null);
+			n = new Node (lastNode.rect.position + 100 * Vector2.up, "Dialog" + lst_Node.Count.ToString (), mySkin);
 		}
 		lst_Node.Add (n);
 	}

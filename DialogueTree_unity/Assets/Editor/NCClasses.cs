@@ -13,9 +13,10 @@ public class MyMathf{
 
 public class Node {
 	public Rect canvasRect;
-	public List<Node> NextNode = new List<Node> ();
-	public List<Node> PrevNode = new List<Node> ();
+	List<NodeLink> NextLink = new List<NodeLink> ();
+	List<NodeLink> PrevLink = new List<NodeLink> ();
 	public Rect rect;
+	public bool isEnd = false;
 	string title;
 
 	GUIStyle style_label, style_box, style_selectedBox;
@@ -25,11 +26,10 @@ public class Node {
 	const float gridSize = 20;
 	protected bool isSelected = false;
 
-	public Node(Vector2 _pos, string _title, GUISkin mySkin, Node _prevNode){
+	public Node(Vector2 _pos, string _title, GUISkin mySkin){
 		rect = new Rect (_pos, new Vector2 (156, 56));
 		canvasRect = rect;
 		title = _title;
-		SetConnect (_prevNode);
 
 		if (mySkin != null) {
 			style_label = mySkin.GetStyle ("textfield");
@@ -42,10 +42,12 @@ public class Node {
 	}
 
 	virtual public void DrawSelf(Vector2 coordinate){
-		if (NextNode.Count == 0 && PrevNode.Count > 0){
+		if (NextLink.Count == 0 && PrevLink.Count > 0) {
+			isEnd = true;
 			Rect endRect = new Rect (canvasRect.position + 37 * Vector2.up, new Vector2 (156, 33));
 			GUI.DrawTexture (endRect, tex_end);
-		}
+		} else
+			isEnd = false;
 
 		canvasRect = rect;
 		canvasRect.position += coordinate;
@@ -58,6 +60,11 @@ public class Node {
 		labelRect.position += new Vector2 (10, 25);
 		labelRect.size = new Vector2 (136, 20);
 		GUI.Label (labelRect, "對話內容", style_label);
+	}
+
+	public void DrawMyLink(){
+		foreach (NodeLink nl in NextLink)
+			nl.DrawSelf ();
 	}
 
 	public Node HitTest(Vector2 mousePos){
@@ -80,18 +87,24 @@ public class Node {
 		GUI.changed = true;
 	}
 
-	public void SetConnect(Node _prevNode){
-		if (_prevNode != null) {
-			_prevNode.NextNode.Add (this);
-			PrevNode.Add (_prevNode);
-		}
+	public void SetConnect(Node prevNode){
+		NodeLink nl = new NodeLink (prevNode, this);
+		PrevLink.Add (nl);
+		prevNode.NextLink.Add (nl);
 	}
 
 	public void DeleteAllConnect(){
-		foreach (Node pn in PrevNode)
-			pn.NextNode.Remove (this);
-		foreach (Node nn in NextNode)
-			nn.PrevNode.Remove (this);
+		for (int i = 0; i < PrevLink.Count; i++)
+			PrevLink [i].DeleteSelf ();
+		for (int i = 0; i < NextLink.Count; i++)
+			NextLink [i].DeleteSelf ();
+	}
+
+	public void DeleteLink(bool isPrev, NodeLink target){
+		if (isPrev)
+			PrevLink.Remove (target);
+		else
+			NextLink.Remove (target);
 	}
 
 }
@@ -99,7 +112,7 @@ public class Node {
 public class StartNode : Node{
 	protected Texture2D normTex, selectTex;
 
-	public StartNode(Vector2 _pos, string _text, GUISkin mySkin):base(_pos, _text, mySkin, null){
+	public StartNode(Vector2 _pos, string _text, GUISkin mySkin):base(_pos, _text, mySkin){
 		normTex = Resources.Load<Texture2D> ("GUISkin/StartNode");
 		selectTex = Resources.Load<Texture2D> ("GUISkin/StartNodeSelect");
 		rect.size = new Vector2 (156, 46);
@@ -122,12 +135,15 @@ public class NodeLink{
 	Texture2D[] tex_arrows = new Texture2D[4];
 	Texture2D tex_setting;
 	Vector2 arrowSize = new Vector2 (10, 10);
-	Vector2 settingSize = new Vector2 (20, 20);
+	Vector2 settingSize = new Vector2 (15, 15);
+
+	Color arrowColors = new Color32 (250, 135, 255, 255);
 
 	public NodeLink(Node na, Node nb){
 		nodeA = na;
 		nodeB = nb;
-		rectEdit = new Rect (new Vector2 (nb.canvasRect.center.x - 28, nb.canvasRect.yMin - 25), new Vector2 (56, 17));
+
+		rectEdit = new Rect (new Vector2 (nb.canvasRect.center.x - 0.5f * settingSize.x, nb.canvasRect.yMax - 13 - settingSize.y), settingSize);
 		tex_arrows [0] = Resources.Load<Texture2D> ("GUISkin/ArrowD");
 		tex_arrows [1] = Resources.Load<Texture2D> ("GUISkin/ArrowU");
 		tex_arrows [2] = Resources.Load<Texture2D> ("GUISkin/ArrowR");
@@ -135,63 +151,84 @@ public class NodeLink{
 		tex_setting = Resources.Load<Texture2D> ("GUISkin/SettingGear");
 	}
 
-	void DrawSelf(){
+	public void DrawSelf(){
 		Vector2 pointA = nodeA.canvasRect.center;
 		Vector2 pointB = nodeB.canvasRect.center;
+		Vector2 pointC = pointA;
+		Color resultColor = Color.white;
 		float dWidth = Mathf.Abs (pointA.x - pointB.x);
-
 		if (Mathf.Abs (pointA.y - pointB.y) < 56) {
+			
+		#region 水平分支
 			if (dWidth < 158)
 				return;
 			if (pointA.x < pointB.x) {
 				pointA.x = nodeA.canvasRect.xMax - 5;
 				pointB.x = nodeB.canvasRect.xMin + 5;
 				GUI.DrawTexture (new Rect (pointB + new Vector2 (-13, -5), arrowSize), tex_arrows [2]);
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (-settingSize.x - 20, -0.5f * settingSize.y), settingSize), tex_setting);
+				pointC = new Vector2 (Mathf.Clamp (pointB.x - 60f, pointA.x, 99999), pointA.y);
 			} else {
 				pointA.x = nodeA.canvasRect.xMin + 5;
 				pointB.x = nodeB.canvasRect.xMax - 5;
 				GUI.DrawTexture (new Rect (pointB + new Vector2 (3, -5), arrowSize), tex_arrows [3]);
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (20, -0.5f * settingSize.y), settingSize), tex_setting);
+				pointC = new Vector2 (Mathf.Clamp (pointB.x + 60f, -99999, pointA.x), pointA.y);
+				resultColor = arrowColors;
 			}
-			Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
-
-		} else if (pointA.y < pointB.y) {
-			pointA.y = nodeA.canvasRect.yMax - 4;
-			pointB.y = nodeB.canvasRect.yMin + 4;
-
-			if (dWidth < 5)
-				Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
-			else {
-				Vector2 tan0 = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 20f, pointA.y + 15f, 99999));
-				Vector2 tan1 = new Vector2 (pointB.x + 0.06f * dWidth, Mathf.Clamp (pointB.y - 80f, pointA.y - 15f, 99999));
-				Vector2 pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 90f, pointA.y, 99999));
-				if (pointC.y - pointA.y >= 1f)
-					Handles.DrawBezier (pointA, pointC, pointA, pointC, Color.white, null, 2f);
-				Handles.DrawBezier (pointC, pointB, tan0, tan1, Color.white, null, 2f);
-			}
-
-			GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, -12), arrowSize), tex_arrows [0]);
-			GUI.DrawTexture (new Rect (pointB + new Vector2 (-0.5f * settingSize.x, -settingSize.y - 20), settingSize), tex_setting);
+			Vector2 tan0 = new Vector2 (pointB.x, pointA.y);
+			Vector2 tan1 = new Vector2 (pointC.x, pointB.y);
+			if (Mathf.Abs (pointA.x - pointC.x) > 1f)
+				Handles.DrawBezier (pointA, pointC, pointA, pointC, resultColor, null, 2f);
+			Handles.DrawBezier (pointC, pointB, tan0, tan1, resultColor, null, 2f);
+			rectEdit.position = Vector2.Lerp (pointC, pointB, 0.5f) - 0.5f * settingSize;
+		#endregion
 
 		} else {
-			pointA.y = nodeA.canvasRect.yMin + 4;
-			pointB.y = nodeB.canvasRect.yMax - 4;
-			if (dWidth < 5)
-				Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
-			else {
-				Vector2 tan0 = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 20f, -99999, pointA.y - 15f));
-				Vector2 tan1 = new Vector2 (pointB.x + 0.06f * dWidth, Mathf.Clamp (pointB.y + 80f, -99999, pointA.y + 15f));
-				Vector2 pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 90f, -99999, pointA.y));
-				if (pointA.y - pointC.y >= 1f)
-					Handles.DrawBezier (pointA, pointC, pointA, pointC, Color.white, null, 2f);
-				Handles.DrawBezier (pointC, pointB, tan0, tan1, Color.white, null, 2f);
+
+		#region 垂直分支
+			if (pointA.y < pointB.y) {
+				pointA.y = nodeA.canvasRect.yMax - 4;
+				pointB.y = nodeB.canvasRect.yMin + 4;
+				pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 80f, pointA.y, 99999));
+				GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, -12), arrowSize), tex_arrows [0]);
+			} else {
+				pointA.y = nodeA.canvasRect.yMin + 4;
+				pointB.y = nodeB.canvasRect.yMax - 4;
+				if (nodeB.isEnd)
+					pointB.y += 14;
+				pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 80f, -99999, pointA.y));
+				GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, 2), arrowSize), tex_arrows [1]);
+				resultColor = arrowColors;
 			}
+			Vector2 tan0 = new Vector2 (pointC.x, pointB.y);
+			Vector2 tan1 = new Vector2 (pointB.x, pointC.y);
+			if (Mathf.Abs (pointA.y - pointC.y) > 1f)
+				Handles.DrawBezier (pointA, pointC, pointA, pointC, resultColor, null, 2f);
+			Handles.DrawBezier (pointC, pointB, tan0, tan1, resultColor, null, 2f);
+		#endregion
 
-			GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, 2), arrowSize), tex_arrows [1]);
-			GUI.DrawTexture (new Rect (pointB + new Vector2 (-0.5f * settingSize.x, 20), settingSize), tex_setting);
-		}
+		} 
+		rectEdit.position = Vector2.Lerp (pointC, pointB, 0.5f) - 0.5f * settingSize;
+		GUI.DrawTexture (rectEdit, tex_setting);
+	}
 
+	public void DeleteSelf(){
+		nodeA.DeleteLink (false, this);
+		nodeB.DeleteLink (true, this);
+		GUI.changed = true;
+	}
+}
+
+public class Character{
+	public string name;
+	public Color color;
+	public Texture2D tex;
+
+	public Character(string _name){
+		name = _name;
+		color = new Color (1, 0.92f, 0, 1);
+		tex = new Texture2D (1, 1);
+		tex.SetPixel (0, 0, color);
+		tex.Apply ();
 	}
 }
 
