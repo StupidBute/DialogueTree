@@ -222,6 +222,7 @@ public class Character{
 	public string name;
 	public Color color;
 	public Texture2D tex;
+	Rect rect, rect_color, rect_name;
 
 	public Character(string _name){
 		name = _name;
@@ -229,6 +230,12 @@ public class Character{
 		tex = new Texture2D (1, 1);
 		tex.SetPixel (0, 0, color);
 		tex.Apply ();
+		rect_color = new Rect (10, 44, 15, 4);
+		rect_name = new Rect (32, 40, 105, 20);
+	}
+
+	public bool ClickCheck(Vector2 mousePos){
+		return true;
 	}
 }
 

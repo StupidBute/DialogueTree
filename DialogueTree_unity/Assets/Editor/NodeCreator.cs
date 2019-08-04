@@ -13,7 +13,7 @@ public class NodeCreator : EditorWindow {
 	GUIStyle nameStyle, titleStyle;
 	Texture2D tex_bg, tex_left, tex_add;
 	Texture2D[] tex_arrows = new Texture2D[4];
-	Rect rect_left, rect_titleL;
+	Rect rect_left, rect_titleL, rect_add;
 	Vector2 arrowSize = new Vector2(10, 10);
 
 	enum DropdownType{close, normal, select};
@@ -135,7 +135,7 @@ public class NodeCreator : EditorWindow {
 	}
 
 	void DrawLeftPanel(){
-		rect_left.height = 75 + 20 * lst_characters.Count;
+		rect_left.height = 68 + 24 * lst_characters.Count;
 		GUI.DrawTexture (rect_left, tex_left);
 		GUI.Label (rect_titleL, "Character List", titleStyle);
 
@@ -144,7 +144,7 @@ public class NodeCreator : EditorWindow {
 			GUI.DrawTexture (new Rect (10, 44 + i * 24, 15, 4), lst_characters [i].tex);
 			GUI.Label (new Rect (32, 40 + i * 24, 105, 20), lst_characters [i].name, nameStyle);
 		}
-
+		rect_add = new Rect (10, 45 + i * 24, 75, 15);
 		GUI.DrawTexture (new Rect (10, 45 + i * 24, 12, 12), tex_add);
 		GUI.Label (new Rect (28, 40 + i * 24, 105, 20), "Add New", mySkin.GetStyle ("label"));
 	}
@@ -176,16 +176,20 @@ public class NodeCreator : EditorWindow {
 		} else {
 			switch(e.type){
 			case EventType.MouseDown:
-				downButton = e.button;
-
-				if (downButton == 0) {
-					ClickCheck (e.mousePosition);
-				} else if (downButton == 1) {
-					if (ClickCheck (e.mousePosition))
-						dType = DropdownType.select;
-					else
-						dType = DropdownType.normal;
+				if (rect_left.Contains (e.mousePosition)) {
+					LeftPanelEvent (e);
+				} else {
+					downButton = e.button;
+					if (downButton == 0) {
+						ClickCheck (e.mousePosition);
+					} else if (downButton == 1) {
+						if (ClickCheck (e.mousePosition))
+							dType = DropdownType.select;
+						else
+							dType = DropdownType.normal;
+					}
 				}
+
 				break;
 
 
@@ -265,6 +269,21 @@ public class NodeCreator : EditorWindow {
 		ResetSelect ();
 		return false;
 
+	}
+
+	//process under mouse down event
+	void LeftPanelEvent(Event e){
+		if (e.button == 0) {
+			if (rect_add.Contains (e.mousePosition)) {
+				lst_characters.Add (new Character ("Insert Name"));
+				GUI.changed = true;
+			} else {
+				for (int i = 0; i < lst_characters.Count; i++) {
+					if (lst_characters [i].ClickCheck (e.mousePosition))
+						break;
+				}
+			}
+		}
 	}
 
 	void ResetSelect(){
