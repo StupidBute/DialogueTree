@@ -328,14 +328,14 @@ MonoBehaviour:
       m_Left: 3
       m_Right: 3
       m_Top: 3
-      m_Bottom: 3
+      m_Bottom: 1
     m_Overflow:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Font: {fileID: 0}
-    m_FontSize: 0
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 12
     m_FontStyle: 0
     m_Alignment: 0
     m_WordWrap: 0

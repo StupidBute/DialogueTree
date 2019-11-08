@@ -4,22 +4,23 @@ using UnityEngine;
 using UnityEditor;
 
 public class NodeCreator : EditorWindow {
+	public static NodeCreator NCGod;
 	List<Node> lst_Node = new List<Node> ();
 	Node End = null;
 	Node SelectNode = null;
 	Vector2 coordinate;
 
 	GUISkin mySkin;
-	GUIStyle nameStyle, titleStyle;
+	GUIStyle nameStyle;
 	Texture2D tex_bg, tex_left, tex_add;
 	Texture2D[] tex_arrows = new Texture2D[4];
-	Rect rect_left, rect_titleL, rect_add;
 	Vector2 arrowSize = new Vector2(10, 10);
 
 	enum DropdownType{close, normal, select};
 	DropdownType dType = DropdownType.close;
 
-	List<Character> lst_characters = new List<Character> ();
+	PopUpWindow nowPopUp = null;
+	LeftPanel leftPanel;
 	bool linking = false;
 	int downButton = -1;
 
@@ -33,26 +34,17 @@ public class NodeCreator : EditorWindow {
 	}
 
 	void OnEnable(){
+		NCGod = this;
 		mySkin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
-		nameStyle = mySkin.GetStyle ("charName");
-		titleStyle = mySkin.GetStyle ("panelTitle");
 		tex_bg = Resources.Load<Texture2D> ("GUISkin/Grid4");
-		tex_add = Resources.Load<Texture2D> ("GUISkin/AddIcon");
-		tex_left = new Texture2D (1, 1);
-		tex_left.SetPixel (0, 0, new Color (0, 0, 0, 0.2f));
-		tex_left.Apply ();
 		tex_arrows [0] = Resources.Load<Texture2D> ("GUISkin/ArrowD");
 		tex_arrows [1] = Resources.Load<Texture2D> ("GUISkin/ArrowU");
 		tex_arrows [2] = Resources.Load<Texture2D> ("GUISkin/ArrowR");
 		tex_arrows [3] = Resources.Load<Texture2D> ("GUISkin/ArrowL");
-		rect_left = new Rect (0, 0, 120, 90);
-		rect_titleL = new Rect (10, 10, 100, 30);
 		coordinate = Vector2.zero;
 		CreateStartNode ();
+		leftPanel = new LeftPanel (mySkin);
 
-		//test
-		lst_characters.Add(new Character("羅大佑"));
-		lst_characters.Add(new Character("盧卡斯"));
 	}
 
 	void OnGUI(){
@@ -64,11 +56,15 @@ public class NodeCreator : EditorWindow {
 
 		DrawNodes ();
 
-		DrawLeftPanel ();
+		leftPanel.DrawSelf ();
 
 		if (GUI.changed)
 			Repaint ();
 		
+	}
+
+	public void SetPopUp(PopUpWindow _pu){
+		nowPopUp = _pu;
 	}
 
 	void DrawBackground(){
@@ -134,20 +130,6 @@ public class NodeCreator : EditorWindow {
 		}
 	}
 
-	void DrawLeftPanel(){
-		rect_left.height = 68 + 24 * lst_characters.Count;
-		GUI.DrawTexture (rect_left, tex_left);
-		GUI.Label (rect_titleL, "Character List", titleStyle);
-
-		int i;
-		for (i = 0; i < lst_characters.Count; i++) {
-			GUI.DrawTexture (new Rect (10, 44 + i * 24, 15, 4), lst_characters [i].tex);
-			GUI.Label (new Rect (32, 40 + i * 24, 105, 20), lst_characters [i].name, nameStyle);
-		}
-		rect_add = new Rect (10, 45 + i * 24, 75, 15);
-		GUI.DrawTexture (new Rect (10, 45 + i * 24, 12, 12), tex_add);
-		GUI.Label (new Rect (28, 40 + i * 24, 105, 20), "Add New", mySkin.GetStyle ("label"));
-	}
 
 	void ProcessEvent(Event e){
 		DropdownMenu (e);
@@ -176,9 +158,7 @@ public class NodeCreator : EditorWindow {
 		} else {
 			switch(e.type){
 			case EventType.MouseDown:
-				if (rect_left.Contains (e.mousePosition)) {
-					LeftPanelEvent (e);
-				} else {
+				if (!leftPanel.HitTest (e)) {
 					downButton = e.button;
 					if (downButton == 0) {
 						ClickCheck (e.mousePosition);
@@ -269,21 +249,6 @@ public class NodeCreator : EditorWindow {
 		ResetSelect ();
 		return false;
 
-	}
-
-	//process under mouse down event
-	void LeftPanelEvent(Event e){
-		if (e.button == 0) {
-			if (rect_add.Contains (e.mousePosition)) {
-				lst_characters.Add (new Character ("Insert Name"));
-				GUI.changed = true;
-			} else {
-				for (int i = 0; i < lst_characters.Count; i++) {
-					if (lst_characters [i].ClickCheck (e.mousePosition))
-						break;
-				}
-			}
-		}
 	}
 
 	void ResetSelect(){

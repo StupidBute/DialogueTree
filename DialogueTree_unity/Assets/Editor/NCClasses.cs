@@ -17,7 +17,7 @@ public class Node {
 	List<NodeLink> PrevLink = new List<NodeLink> ();
 	public Rect rect;
 	public bool isEnd = false;
-	string title;
+	string charName;
 
 	GUIStyle style_label, style_box, style_selectedBox;
 	Texture2D tex_end;
@@ -29,7 +29,7 @@ public class Node {
 	public Node(Vector2 _pos, string _title, GUISkin mySkin){
 		rect = new Rect (_pos, new Vector2 (156, 56));
 		canvasRect = rect;
-		title = _title;
+		charName = _title;
 
 		if (mySkin != null) {
 			style_label = mySkin.GetStyle ("textfield");
@@ -52,9 +52,9 @@ public class Node {
 		canvasRect = rect;
 		canvasRect.position += coordinate;
 		if (isSelected)
-			GUI.Box (canvasRect, title, style_selectedBox);
+			GUI.Box (canvasRect, charName, style_selectedBox);
 		else
-			GUI.Box (canvasRect, title, style_box);
+			GUI.Box (canvasRect, charName, style_box);
 
 		Rect labelRect = canvasRect;
 		labelRect.position += new Vector2 (10, 25);
@@ -218,24 +218,181 @@ public class NodeLink{
 	}
 }
 
+public class LeftPanel{
+	public List<Character> lst_chars = new List<Character> ();
+	GUISkin mySkin;
+	GUIStyle titleStyle, labelStyle;
+	Rect rect_left, rect_titleL, rect_add;
+	Texture2D tex_left, tex_add; 
+
+	int hitChar = -1;
+
+	public LeftPanel(GUISkin _skin){
+		mySkin = _skin;
+		titleStyle = mySkin.GetStyle ("panelTitle");
+		labelStyle = mySkin.GetStyle ("label");
+
+		rect_left = new Rect (0, 0, 120, 90);
+		rect_titleL = new Rect (10, 10, 100, 30);
+		rect_add = new Rect (10, 69, 75, 15);
+
+		tex_add = Resources.Load<Texture2D> ("GUISkin/AddIcon");
+		tex_left = new Texture2D (1, 1);
+		tex_left.SetPixel (0, 0, new Color (0, 0, 0, 0.2f));
+		tex_left.Apply ();
+	}
+
+	//process under mouse down event
+	public bool HitTest(Event e){
+		if (!rect_left.Contains (e.mousePosition)) {
+			foreach (Character c in lst_chars)
+				c.Chosen (false);
+			GUI.changed = true;
+			return false;
+		}
+		
+		if (e.button == 0) {
+			if (rect_add.Contains (e.mousePosition)) {
+				if (hitChar != -1) {
+					lst_chars [hitChar].Chosen (false);
+					hitChar = -1;
+				}
+
+				lst_chars.Add (new Character ("Insert Name", new Rect (6, 37 + lst_chars.Count * 24, 110, 20), mySkin));
+				GUI.changed = true;
+			} else {
+				hitChar = -1;
+				for (int i = 0; i < lst_chars.Count; i++) {
+					if(hitChar != -1)
+						lst_chars [i].Chosen (false);
+					else if (lst_chars [i].HitTest (e.mousePosition))
+						hitChar = i;
+					else
+						lst_chars [i].Chosen (false);
+				}
+
+				GUI.changed = true;
+			}
+		}
+		return true;
+	}
+
+	public void DrawSelf(){
+		rect_left.height = 68 + 24 * lst_chars.Count;
+		GUI.DrawTexture (rect_left, tex_left);
+		GUI.Label (rect_titleL, "Character List", titleStyle);
+
+		foreach (Character c in lst_chars)
+			c.DrawSelf ();
+		
+		rect_add = new Rect (10, 45 + lst_chars.Count * 24, 75, 15);
+		GUI.DrawTexture (new Rect (10, 45 + lst_chars.Count * 24, 12, 12), tex_add);
+		GUI.Label (new Rect (28, 40 + lst_chars.Count * 24, 65, 20), "Add New", labelStyle);
+	}
+}
+
 public class Character{
 	public string name;
 	public Color color;
 	public Texture2D tex;
-	Rect rect, rect_color, rect_name;
+	GUIStyle nameStyle, fieldStyle;
+	Rect rect, rect_color, rect_name, rect_nameField;
+	bool chosen = false;
+	bool editColor = false;
+	bool editName = false;
+	Texture2D tex_choose;
 
-	public Character(string _name){
+	public Character(string _name, Rect _rect, GUISkin _skin){
 		name = _name;
+		RefreshRect (_rect);
+		nameStyle = _skin.GetStyle ("charName");
+		fieldStyle = _skin.GetStyle ("textField");
+
 		color = new Color (1, 0.92f, 0, 1);
 		tex = new Texture2D (1, 1);
 		tex.SetPixel (0, 0, color);
 		tex.Apply ();
-		rect_color = new Rect (10, 44, 15, 4);
-		rect_name = new Rect (32, 40, 105, 20);
+
+		tex_choose = new Texture2D (1, 1);
+		tex_choose.SetPixel (0, 0, new Color (.35f, .35f, .35f, .9f));
+		tex_choose.Apply ();
 	}
 
-	public bool ClickCheck(Vector2 mousePos){
-		return true;
+	public bool HitTest(Vector2 mousePos){
+		if (rect.Contains (mousePos)) {
+			if (chosen) {
+				if (rect_color.Contains (mousePos))
+					editColor = true;
+				else
+					editColor = false;
+				if (rect_name.Contains (mousePos))
+					editName = true;
+				else
+					editName = false;
+			} else {
+				Chosen (true);
+			}
+			return true;
+		} else {
+			Chosen (false);
+			return false;
+		}
+	}
+
+	public void RefreshRect(Rect _rect){
+		rect = _rect;
+		rect_color = new Rect (rect.position.x + 4, rect.position.y + 7, 15, 6);
+		rect_name = new Rect (rect.position.x + 26, rect.position.y + 3, 85, 20);
+		rect_nameField = new Rect (rect_name.position + new Vector2 (-3, -2), rect_name.size + new Vector2(0, -2));
+	}
+
+	public void DrawSelf(){
+		if (chosen)
+			GUI.DrawTexture (rect, tex_choose);
+		GUI.DrawTexture (rect_color, tex);
+		if (editName) {
+			GUI.skin.settings.cursorColor = Color.white;
+			name = GUI.TextField (rect_nameField, name, fieldStyle);
+			if (Event.current.keyCode == KeyCode.Return) {
+				editName = false;
+				GUI.changed = true;
+			}
+
+		}
+		else
+			GUI.Label (rect_name, name, nameStyle);
+		//if (editColor)
+			//color = EditorGUI.ColorField (new Rect (rect_color.position, new Vector2 (100, 20)), color);
+	}
+
+	public void Chosen(bool isChosen){
+		if (chosen = isChosen)
+			return;
+		
+		chosen = isChosen;
+		if (chosen) {
+		
+		} else {
+			editColor = false;
+			editName = false;
+		}
+	}
+}
+
+public class PopUpWindow{
+	Rect windowRect;
+
+	public PopUpWindow(Rect _rect){
+		windowRect = _rect;
+		NodeCreator.NCGod.SetPopUp (this);
+	}
+
+	public virtual void DrawSelf(){
+	
+	}
+
+	public virtual void HitTest(){
+		
 	}
 }
 
