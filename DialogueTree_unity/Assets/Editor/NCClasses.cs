@@ -27,6 +27,7 @@ public class Node {
 	protected bool isSelected = false;
 
 	public Node(Vector2 _pos, string _title, GUISkin mySkin){
+		_pos = MyMathf.SnapPos (_pos, gridSize);
 		rect = new Rect (_pos, new Vector2 (156, 56));
 		canvasRect = rect;
 		charName = _title;
@@ -87,10 +88,13 @@ public class Node {
 		GUI.changed = true;
 	}
 
-	public void SetConnect(Node prevNode){
-		NodeLink nl = new NodeLink (prevNode, this);
-		PrevLink.Add (nl);
-		prevNode.NextLink.Add (nl);
+	public virtual void SetConnect(Node nextNode){
+		NodeLink nl = new NodeLink (this, nextNode);
+		if (NextLink.Count > 0)
+			NextLink [0].DeleteSelf ();
+			
+		NextLink.Add (nl);
+		nextNode.PrevLink.Add (nl);
 	}
 
 	public void DeleteAllConnect(){
@@ -136,14 +140,13 @@ public class NodeLink{
 	Texture2D tex_setting;
 	Vector2 arrowSize = new Vector2 (10, 10);
 	Vector2 settingSize = new Vector2 (15, 15);
-
 	Color arrowColors = new Color32 (250, 135, 255, 255);
 
 	public NodeLink(Node na, Node nb){
 		nodeA = na;
 		nodeB = nb;
 
-		rectEdit = new Rect (new Vector2 (nb.canvasRect.center.x - 0.5f * settingSize.x, nb.canvasRect.yMax - 13 - settingSize.y), settingSize);
+		rectEdit = new Rect (new Vector2 (nodeB.canvasRect.center.x - 0.5f * settingSize.x, nodeB.canvasRect.yMax - 13 - settingSize.y), settingSize);
 		tex_arrows [0] = Resources.Load<Texture2D> ("GUISkin/ArrowD");
 		tex_arrows [1] = Resources.Load<Texture2D> ("GUISkin/ArrowU");
 		tex_arrows [2] = Resources.Load<Texture2D> ("GUISkin/ArrowR");
