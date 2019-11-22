@@ -136,82 +136,85 @@ public class NodeLink{
 	Node nodeA, nodeB;
 	Rect rectEdit;
 
+	Color[] arrowColors = new Color[]{ Color.white, new Color32 (250, 135, 255, 255) };
 	Texture2D[] tex_arrows = new Texture2D[4];
-	Texture2D tex_setting;
+	Texture2D[] tex_edits = new Texture2D[2];
+	Vector2[] LinkDirect = new Vector2[]{ Vector2.right, Vector2.left, Vector2.down, Vector2.up };
 	Vector2 arrowSize = new Vector2 (10, 10);
-	Vector2 settingSize = new Vector2 (15, 15);
-	Color arrowColors = new Color32 (250, 135, 255, 255);
+	Vector2 editSize = new Vector2 (15, 15);
 
 	public NodeLink(Node na, Node nb){
 		nodeA = na;
 		nodeB = nb;
 
-		rectEdit = new Rect (new Vector2 (nodeB.canvasRect.center.x - 0.5f * settingSize.x, nodeB.canvasRect.yMax - 13 - settingSize.y), settingSize);
-		tex_arrows [0] = Resources.Load<Texture2D> ("GUISkin/ArrowD");
-		tex_arrows [1] = Resources.Load<Texture2D> ("GUISkin/ArrowU");
-		tex_arrows [2] = Resources.Load<Texture2D> ("GUISkin/ArrowR");
-		tex_arrows [3] = Resources.Load<Texture2D> ("GUISkin/ArrowL");
-		tex_setting = Resources.Load<Texture2D> ("GUISkin/SettingGear");
+		tex_arrows [0] = Resources.Load<Texture2D> ("GUISkin/ArrowR");
+		tex_arrows [1] = Resources.Load<Texture2D> ("GUISkin/ArrowL");
+		tex_arrows [2] = Resources.Load<Texture2D> ("GUISkin/ArrowD");
+		tex_arrows [3] = Resources.Load<Texture2D> ("GUISkin/ArrowU");
+		tex_edits[0] = Resources.Load<Texture2D> ("GUISkin/EditGear1");
+		tex_edits[1] = Resources.Load<Texture2D> ("GUISkin/EditGear2");
+		rectEdit = new Rect (new Vector2 (nodeB.canvasRect.center.x - 0.5f * editSize.x, nodeB.canvasRect.yMax - 13 - editSize.y), editSize);
+	}
+
+	public NodeLink HitTest(Vector2 mousePos){
+		return rectEdit.Contains (mousePos) ? this : null;
 	}
 
 	public void DrawSelf(){
+		#region 設定數值
 		Vector2 pointA = nodeA.canvasRect.center;
 		Vector2 pointB = nodeB.canvasRect.center;
 		Vector2 pointC = pointA;
-		Color resultColor = Color.white;
+		Vector2 tan0, tan1;
+		int LinkType = 0;	//	0:A左B右		1:A右B左		2:A上B下		3:A下B上
+
+		//判別方向
 		float dWidth = Mathf.Abs (pointA.x - pointB.x);
 		if (Mathf.Abs (pointA.y - pointB.y) < 56) {
-			
-		#region 水平分支
+		//水平分支
 			if (dWidth < 158)
 				return;
 			if (pointA.x < pointB.x) {
 				pointA.x = nodeA.canvasRect.xMax - 5;
 				pointB.x = nodeB.canvasRect.xMin + 5;
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (-13, -5), arrowSize), tex_arrows [2]);
 				pointC = new Vector2 (Mathf.Clamp (pointB.x - 60f, pointA.x, 99999), pointA.y);
+				LinkType = 0;
 			} else {
 				pointA.x = nodeA.canvasRect.xMin + 5;
 				pointB.x = nodeB.canvasRect.xMax - 5;
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (3, -5), arrowSize), tex_arrows [3]);
+
 				pointC = new Vector2 (Mathf.Clamp (pointB.x + 60f, -99999, pointA.x), pointA.y);
-				resultColor = arrowColors;
+				LinkType = 1;
 			}
-			Vector2 tan0 = new Vector2 (pointB.x, pointA.y);
-			Vector2 tan1 = new Vector2 (pointC.x, pointB.y);
-			if (Mathf.Abs (pointA.x - pointC.x) > 1f)
-				Handles.DrawBezier (pointA, pointC, pointA, pointC, resultColor, null, 2f);
-			Handles.DrawBezier (pointC, pointB, tan0, tan1, resultColor, null, 2f);
-			rectEdit.position = Vector2.Lerp (pointC, pointB, 0.5f) - 0.5f * settingSize;
-		#endregion
 
 		} else {
-
-		#region 垂直分支
+		//垂直分支
 			if (pointA.y < pointB.y) {
 				pointA.y = nodeA.canvasRect.yMax - 4;
 				pointB.y = nodeB.canvasRect.yMin + 4;
 				pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 80f, pointA.y, 99999));
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, -12), arrowSize), tex_arrows [0]);
+				LinkType = 2;
 			} else {
 				pointA.y = nodeA.canvasRect.yMin + 4;
 				pointB.y = nodeB.canvasRect.yMax - 4;
 				if (nodeB.isEnd)
 					pointB.y += 14;
 				pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 80f, -99999, pointA.y));
-				GUI.DrawTexture (new Rect (pointB + new Vector2 (-5, 2), arrowSize), tex_arrows [1]);
-				resultColor = arrowColors;
+				LinkType = 3;
 			}
-			Vector2 tan0 = new Vector2 (pointC.x, pointB.y);
-			Vector2 tan1 = new Vector2 (pointB.x, pointC.y);
-			if (Mathf.Abs (pointA.y - pointC.y) > 1f)
-				Handles.DrawBezier (pointA, pointC, pointA, pointC, resultColor, null, 2f);
-			Handles.DrawBezier (pointC, pointB, tan0, tan1, resultColor, null, 2f);
+
+		}
+
+		tan0 = LinkType < 2 ? new Vector2 (pointB.x, pointA.y) : new Vector2 (pointC.x, pointB.y);
+		tan1 = LinkType < 2 ? new Vector2 (pointC.x, pointB.y) : new Vector2 (pointB.x, pointC.y);
+		rectEdit.position = Vector2.Lerp (pointC, pointB, 0.5f) - 0.5f * editSize;
 		#endregion
 
-		} 
-		rectEdit.position = Vector2.Lerp (pointC, pointB, 0.5f) - 0.5f * settingSize;
-		GUI.DrawTexture (rectEdit, tex_setting);
+		if (Vector2.Distance (pointA, pointC) > 1f)
+			Handles.DrawBezier (pointA, pointC, pointA, pointC, arrowColors [LinkType % 2], null, 2f);
+		Handles.DrawBezier (pointC, pointB, tan0, tan1, arrowColors [LinkType % 2], null, 2f);
+		GUI.DrawTexture (new Rect (pointB + 8f * LinkDirect [LinkType] - 0.5f * arrowSize, arrowSize), tex_arrows [LinkType]);
+		GUI.DrawTexture (rectEdit, tex_edits [LinkType % 2]);
 	}
 
 	public void DeleteSelf(){
@@ -220,6 +223,8 @@ public class NodeLink{
 		GUI.changed = true;
 	}
 }
+
+#region 左面板相關
 
 public class LeftPanel{
 	public List<Character> lst_chars = new List<Character> ();
@@ -398,4 +403,6 @@ public class PopUpWindow{
 		
 	}
 }
+
+#endregion
 
