@@ -4,22 +4,24 @@ using UnityEngine;
 using UnityEditor;
 
 public class NodeCreator : EditorWindow {
-	public static NodeCreator NCGod;
-	List<Node> lst_Node = new List<Node> ();
-	Node SelectNode = null;
-	Vector2 coordinate;
-
 	GUISkin mySkin;
 	GUIStyle nameStyle;
 	Texture2D tex_bg, tex_left, tex_add;
 
-	enum DropdownType{close, normal, select};
-	DropdownType dType = DropdownType.close;
+	enum WindowState{normal, drag, popup, link};
+	//enum DropdownType{close, normal, select};
+	WindowState nowState = WindowState.normal;
+	//DropdownType dType = DropdownType.close;
 
-	PopUpWindow nowPopUp = null;
+	public enum ClickType{node, leftPanel, rightPanel, popup}
 	LeftPanel leftPanel;
-	bool linking = false;
-	int downButton = -1;
+	RightPanel rightPanel;
+
+	List<Node> lst_Node = new List<Node> ();
+	Node SelectNode = null;
+	Vector2 coordinate;
+	//bool linking = false;
+                       	//int downButton = -1;
 
 	[MenuItem("Window/Node Creator")]
 	static void Init(){
@@ -31,13 +33,12 @@ public class NodeCreator : EditorWindow {
 	}
 
 	void OnEnable(){
-		NCGod = this;
 		mySkin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
 		tex_bg = Resources.Load<Texture2D> ("GUISkin/Grid4");
 		coordinate = Vector2.zero;
-		CreateNode (Vector2.zero);
+		CreateNode (Vector2.zero, 0);
 		leftPanel = new LeftPanel (mySkin);
-
+		rightPanel = new RightPanel ();
 	}
 
 	void OnGUI(){
@@ -45,19 +46,14 @@ public class NodeCreator : EditorWindow {
 
 		ProcessEvent (Event.current);
 
-		DrawConnect ();
-
 		DrawNodes ();
 
 		leftPanel.DrawSelf ();
+		rightPanel.DrawSelf (position.size);
 
 		if (GUI.changed)
 			Repaint ();
 		
-	}
-
-	public void SetPopUp(PopUpWindow _pu){
-		nowPopUp = _pu;
 	}
 
 	void DrawBackground(){
@@ -75,114 +71,131 @@ public class NodeCreator : EditorWindow {
 		}
 	}
 
-	void DrawConnect(){
+	void DrawNodes(){
 		foreach (Node n in lst_Node)
 			n.DrawMyLink ();
-	}
-	void DrawNodes(){
-		if (lst_Node.Count > 0) {
-			foreach (Node _n in lst_Node) {
-				if(_n != SelectNode)
-					_n.DrawSelf (coordinate);
-			}
-
-			if (SelectNode != null)
-				SelectNode.DrawSelf (coordinate);
+		foreach (Node _n in lst_Node) {
+			if(_n != SelectNode)
+				_n.DrawSelf (coordinate);
 		}
-	}
 
+		if (SelectNode != null)
+			SelectNode.DrawSelf (coordinate);
+	}
 
 	void ProcessEvent(Event e){
-		DropdownMenu (e);
-		dType = DropdownType.close;
-
-		if (e.type == EventType.MouseUp) {
-			downButton = -1;
-			return;
-		}
-			
-		if (linking) {
-			Vector2 mousePos = e.mousePosition;
+		Vector2 mousePos = e.mousePosition;
+		switch (nowState) {
+		case WindowState.normal:
+			if (e.type == EventType.MouseDown) {
+				if (!leftPanel.HitTest (e) && !rightPanel.HitTest(mousePos)) {
+					switch (e.button) {
+					case 0:
+						if (!ClickNode (mousePos))
+							ClickLink (mousePos);
+						nowState = WindowState.drag;
+						break;
+					case 1:
+						if (ClickNode (mousePos))
+							NodeDropdown ();
+						else if(!ClickLink(mousePos))
+							MainDropdown (mousePos);
+						break;
+					default:
+						nowState = WindowState.drag;
+						break;
+					}
+				}
+			}
+			break;
+		case WindowState.drag:
+			if (e.type == EventType.MouseDrag) {
+				if (SelectNode == null) {
+					coordinate += e.delta;
+					GUI.changed = true;
+				} else
+					SelectNode.FollowMouse (e.delta);
+			}else if (e.type == EventType.MouseUp)
+				nowState = WindowState.normal;
+			break;
+		case WindowState.popup:
+			break;
+		case WindowState.link:
 			Link (SelectNode.canvasRect.center, mousePos);
 			CanvasAutoMove (mousePos);
-
 			GUI.changed = true;
 			if (e.type == EventType.MouseDown && e.button == 0) {
 				Node originNode = SelectNode;
-				if (ClickCheck (mousePos))
+				if (ClickNode (mousePos))
 					originNode.SetConnect (SelectNode);
-
-				downButton = -1;
-				linking = false;
+				nowState = WindowState.normal;
 				ResetSelect ();
 			}
-		} else {
-			switch(e.type){
-			case EventType.MouseDown:
-				if (!leftPanel.HitTest (e)) {
-					downButton = e.button;
-					if (downButton == 0) {
-						ClickCheck (e.mousePosition);
-					} else if (downButton == 1) {
-						if (ClickCheck (e.mousePosition))
-							dType = DropdownType.select;
-						else
-							dType = DropdownType.normal;
-					}
-				}
-
-				break;
-
-
-			case EventType.MouseDrag:
-				if (downButton == 2 || (downButton != -1 && SelectNode == null)) {
-					coordinate += e.delta;
-					GUI.changed = true;
-				}else if(SelectNode != null){
-					SelectNode.FollowMouse (e.delta);
-				}
-				break;
-			case EventType.KeyDown:
-				if (e.keyCode == KeyCode.Space) {
-					coordinate = -lst_Node [0].rect.position + 0.5f * position.size - new Vector2 (80, 80);
-					GUI.changed = true;
-				}
-				break;
-			}
+			break;
 		}
-
-
 	}
 
 	void Link(Vector2 pointA, Vector2 pointB){
 		Handles.DrawBezier (pointA, pointB, pointA, pointB, Color.white, null, 2f);
 	}
 
-	void DropdownMenu(Event e){
-		if (dType == DropdownType.close)
-			return;
-		
+#region Dropdowns
+	void MainDropdown(Vector2 mousePos){
 		GenericMenu menu = new GenericMenu ();
-		if (dType == DropdownType.normal) {
-			menu.AddItem (new GUIContent ("Create New"), false, () => CreateNode (e.mousePosition));
-			menu.AddSeparator ("");
-			menu.AddDisabledItem (new GUIContent ("Create Child"));
-			menu.AddDisabledItem (new GUIContent ("Make Connection"));
-			menu.AddDisabledItem (new GUIContent ("Edit"));
-			menu.AddDisabledItem (new GUIContent ("Delete"));
-		} else {
-			menu.AddItem (new GUIContent ("Create New"), false, () => CreateNode (e.mousePosition));
-			menu.AddSeparator ("");
-			menu.AddItem (new GUIContent ("Create Child"), false, () => CreateChild ());
-			menu.AddItem (new GUIContent ("Make Connection"), false, () => MakeConnect (e.mousePosition));
-			menu.AddDisabledItem (new GUIContent ("Edit"));
-			if (SelectNode.GetType () != typeof(StartNode))
-				menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
-			else
-				menu.AddDisabledItem (new GUIContent ("Delete"));
-		}
+		menu.AddItem (new GUIContent ("Create Dialogue"), false, () => CreateNode (mousePos, 0));
+		menu.AddItem (new GUIContent ("Create Question"), false, () => CreateNode (mousePos, 1));
+		menu.AddItem (new GUIContent ("Create Diverge"), false, () => CreateNode (mousePos, 2));
 		menu.ShowAsContext ();
 	}
+
+	void NodeDropdown(){
+		GenericMenu menu = new GenericMenu ();
+		menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
+		if (SelectNode.GetType () != typeof(StartNode))
+			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
+		else
+			menu.AddDisabledItem (new GUIContent ("Delete"));
+		menu.ShowAsContext ();
+	}
+#endregion
+
+#region Click
+	bool ClickNode(Vector2 mousePos){
+		Node ClickedNode = null;
+		foreach (Node _n in lst_Node) {
+			ClickedNode = _n.HitTest (mousePos);
+
+			//Clicked node
+			if (ClickedNode != null) {
+				if (ClickedNode != SelectNode) {
+					ResetSelect ();
+					SelectNode = ClickedNode;
+				}
+				return true;
+			}
+		}
+
+		//clicked nothing
+		ResetSelect ();
+		return false;
+
+	}
+
+	bool ClickLink(Vector2 mousePos){
+		foreach (Node _n in lst_Node) {
+			if (_n.HitLinkTest (mousePos))
+				return true;
+		}
+		return false;
+	}
+#endregion
+
+	void ResetSelect(){
+		if (SelectNode != null) {
+			SelectNode.Selected (false);
+			SelectNode = null;
+		}
+  	}
 
 	void CanvasAutoMove(Vector2 mousePos){
 		if (mousePos.x > position.width - 50)
@@ -196,51 +209,25 @@ public class NodeCreator : EditorWindow {
 			coordinate.y += 4;
 	}
 
-	bool ClickCheck(Vector2 mousePos){
-		Node ClickedNode = null;
-		for (int i = lst_Node.Count-1; i >=0; i--) {
-			ClickedNode = lst_Node [i].HitTest (mousePos);
-
-			//Clicked node
-			if (ClickedNode != null) {
-				if (ClickedNode != SelectNode) {
-					ResetSelect ();
-					SelectNode = ClickedNode;
-				}
-				return true;
+	void CreateNode(Vector2 mousePos, int type){
+		Node n = null;
+		if (lst_Node.Count == 0)
+			n = new StartNode (new Vector2 (120, 150), "", null);
+		else {
+			switch (type) {
+			case 0:
+				n = new DialogueNode (mousePos - coordinate, "Dialog" + lst_Node.Count.ToString (), mySkin);
+				break;
+			case 1:
+				n = new QuestionNode (mousePos - coordinate, "Dialog" + lst_Node.Count.ToString (), mySkin);
+				break;
+			case 2:
+				n = new DivergeNode (mousePos - coordinate, "Dialog" + lst_Node.Count.ToString (), mySkin);
+				break;
 			}
 		}
-		//clicked nothing
-		ResetSelect ();
-		return false;
-
-	}
-
-	void ResetSelect(){
-		if (SelectNode != null) {
-			SelectNode.Selected (false);
-			SelectNode = null;
-		}
-  	}
-
-	void MakeConnect(Vector2 mousePos){
-		linking = true;
-  	}
-
-	void CreateChild(){
-		Node n;
-		n = new Node (SelectNode.rect.position + new Vector2 (0, 100), "Dialog" + lst_Node.Count.ToString (), mySkin);
-		SelectNode.SetConnect (n);
-		lst_Node.Add (n);
-	}
-
-	void CreateNode(Vector2 mousePos){
-		Node n;
-		if(lst_Node.Count == 0)
-			n = new StartNode (new Vector2 (120, 150), "", null);
-		else
-			n = new Node (mousePos - coordinate, "Dialog" + lst_Node.Count.ToString (), mySkin);
-		lst_Node.Add (n);
+		if(n != null)
+			lst_Node.Add (n);
 	}
 
 	void DeleteNode(Node _n){

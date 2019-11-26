@@ -4,63 +4,52 @@ using UnityEngine;
 using UnityEditor;
 
 public class MyMathf{
-	public static Vector2 SnapPos(Vector2 position, float range){
-		position.x = Mathf.Round (position.x / range) * range;
-		position.y = Mathf.Round (position.y / range) * range;
-		return position;
+	public static Vector2 SnapPos(Vector2 size, Vector2 position, float range){
+		Vector2 center = position + 0.5f * size;
+		center.x = Mathf.Round (center.x / range) * range;
+		center.y = Mathf.Round (center.y / range) * range;
+		return center - 0.5f * size;
 	}
 }
 
 public class Node {
 	public Rect canvasRect;
+	Rect rect;
 	List<NodeLink> NextLink = new List<NodeLink> ();
 	List<NodeLink> PrevLink = new List<NodeLink> ();
-	public Rect rect;
-	public bool isEnd = false;
-	string charName;
 
-	GUIStyle style_label, style_box, style_selectedBox;
-	Texture2D tex_end;
-	Vector2 dragPos;
+	string nodeName;
 
+	//GUIStyle style_label;
 	const float gridSize = 20;
-	protected bool isSelected = false;
+	protected Texture2D tex_normal, tex_selected;
+	protected Vector2 size = new Vector2 (140, 57);
+	Vector2 dragPos;
+	bool isSelected = false;
+
 
 	public Node(Vector2 _pos, string _title, GUISkin mySkin){
-		_pos = MyMathf.SnapPos (_pos, gridSize);
-		rect = new Rect (_pos, new Vector2 (156, 56));
-		canvasRect = rect;
-		charName = _title;
-
-		if (mySkin != null) {
-			style_label = mySkin.GetStyle ("textfield");
-			style_box = mySkin.GetStyle ("box");
-			style_selectedBox = mySkin.GetStyle ("selectedBox");
-			tex_end = Resources.Load<Texture2D> ("GUISkin/EndNode2");
-
-		}
-
+		SnapGrid (_pos);
+		tex_selected = Resources.Load<Texture2D> ("GUISkin/Nodes/SelectedOutline");
+		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DialogueNode");
 	}
 
 	virtual public void DrawSelf(Vector2 coordinate){
-		if (NextLink.Count == 0 && PrevLink.Count > 0) {
-			isEnd = true;
-			Rect endRect = new Rect (canvasRect.position + 37 * Vector2.up, new Vector2 (156, 33));
-			GUI.DrawTexture (endRect, tex_end);
-		} else
-			isEnd = false;
-
 		canvasRect = rect;
 		canvasRect.position += coordinate;
-		if (isSelected)
-			GUI.Box (canvasRect, charName, style_selectedBox);
-		else
-			GUI.Box (canvasRect, charName, style_box);
+		if (isSelected) {
+			Rect outlineRect = canvasRect;
+			outlineRect.position -= 3f * Vector2.one;
+			outlineRect.size += 6 * Vector2.one;
+			GUI.DrawTexture(outlineRect, tex_selected);
+		}
+		GUI.DrawTexture(canvasRect, tex_normal);
 
+		/*
 		Rect labelRect = canvasRect;
 		labelRect.position += new Vector2 (10, 25);
 		labelRect.size = new Vector2 (136, 20);
-		GUI.Label (labelRect, "對話內容", style_label);
+		GUI.Label (labelRect, "對話內容", style_label);*/
 	}
 
 	public void DrawMyLink(){
@@ -76,6 +65,14 @@ public class Node {
 			return null;
 	}
 
+	public bool HitLinkTest(Vector2 mousePos){
+		foreach (NodeLink _link in NextLink) {
+			if (_link.HitTest (mousePos))
+				return true;
+		}
+		return false;
+	}
+
 	public void Selected(bool _isSelected){
 		isSelected = _isSelected;
 		dragPos = rect.position;
@@ -84,7 +81,7 @@ public class Node {
 
 	public void FollowMouse(Vector2 mouseDelta){
 		dragPos += mouseDelta;
-		rect.position = new Vector2 (Mathf.Round (dragPos.x / gridSize) * gridSize, Mathf.Round (dragPos.y / gridSize) * gridSize);
+		SnapGrid (dragPos);
 		GUI.changed = true;
 	}
 
@@ -111,24 +108,36 @@ public class Node {
 			NextLink.Remove (target);
 	}
 
+	protected void SnapGrid(Vector2 _pos){
+		rect = new Rect (MyMathf.SnapPos (size, _pos, gridSize), size);
+	}
+
 }
 
 public class StartNode : Node{
-	protected Texture2D normTex, selectTex;
-
 	public StartNode(Vector2 _pos, string _text, GUISkin mySkin):base(_pos, _text, mySkin){
-		normTex = Resources.Load<Texture2D> ("GUISkin/StartNode");
-		selectTex = Resources.Load<Texture2D> ("GUISkin/StartNodeSelect");
-		rect.size = new Vector2 (156, 46);
+		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/NewStart");
+		size = new Vector2 (121, 38);
+		SnapGrid (_pos);
 	}
+}
 
-	override public void DrawSelf(Vector2 coordinate){
-		canvasRect = rect;
-		canvasRect.position += coordinate;
-		if (isSelected)
-			GUI.DrawTexture (canvasRect, selectTex);
-		else
-			GUI.DrawTexture (canvasRect, normTex);
+public class DialogueNode : Node{
+	public DialogueNode(Vector2 _pos, string _text, GUISkin mySkin):base(_pos, _text, mySkin){
+	}
+}
+
+public class QuestionNode : Node{
+	public QuestionNode(Vector2 _pos, string _text, GUISkin mySkin):base(_pos, _text, mySkin){
+		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/QuestionNode");
+	}
+}
+
+public class DivergeNode : Node{
+	public DivergeNode(Vector2 _pos, string _text, GUISkin mySkin):base(_pos, _text, mySkin){
+		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DivergeNode");
+		size = new Vector2 (109, 50);
+		SnapGrid (_pos);
 	}
 }
 
@@ -139,7 +148,7 @@ public class NodeLink{
 	Color[] arrowColors = new Color[]{ Color.white, new Color32 (250, 135, 255, 255) };
 	Texture2D[] tex_arrows = new Texture2D[4];
 	Texture2D[] tex_edits = new Texture2D[2];
-	Vector2[] LinkDirect = new Vector2[]{ Vector2.right, Vector2.left, Vector2.down, Vector2.up };
+	Vector2[] LinkDirect = new Vector2[]{ Vector2.right, Vector2.left, Vector2.up, Vector2.down };
 	Vector2 arrowSize = new Vector2 (10, 10);
 	Vector2 editSize = new Vector2 (15, 15);
 
@@ -156,8 +165,16 @@ public class NodeLink{
 		rectEdit = new Rect (new Vector2 (nodeB.canvasRect.center.x - 0.5f * editSize.x, nodeB.canvasRect.yMax - 13 - editSize.y), editSize);
 	}
 
-	public NodeLink HitTest(Vector2 mousePos){
-		return rectEdit.Contains (mousePos) ? this : null;
+	public bool HitTest(Vector2 mousePos){
+		bool hit = rectEdit.Contains (mousePos);
+		if (hit)	Dropdown ();
+		return rectEdit.Contains (mousePos);
+	}
+
+	void Dropdown(){
+		GenericMenu menu = new GenericMenu ();
+		menu.AddItem (new GUIContent ("Delete"), false, () => DeleteSelf());
+		menu.ShowAsContext ();
 	}
 
 	public void DrawSelf(){
@@ -169,10 +186,9 @@ public class NodeLink{
 		int LinkType = 0;	//	0:A左B右		1:A右B左		2:A上B下		3:A下B上
 
 		//判別方向
-		float dWidth = Mathf.Abs (pointA.x - pointB.x);
 		if (Mathf.Abs (pointA.y - pointB.y) < 56) {
 		//水平分支
-			if (dWidth < 158)
+			if (Mathf.Abs (pointA.x - pointB.x) < 158)
 				return;
 			if (pointA.x < pointB.x) {
 				pointA.x = nodeA.canvasRect.xMax - 5;
@@ -182,7 +198,6 @@ public class NodeLink{
 			} else {
 				pointA.x = nodeA.canvasRect.xMin + 5;
 				pointB.x = nodeB.canvasRect.xMax - 5;
-
 				pointC = new Vector2 (Mathf.Clamp (pointB.x + 60f, -99999, pointA.x), pointA.y);
 				LinkType = 1;
 			}
@@ -197,8 +212,6 @@ public class NodeLink{
 			} else {
 				pointA.y = nodeA.canvasRect.yMin + 4;
 				pointB.y = nodeB.canvasRect.yMax - 4;
-				if (nodeB.isEnd)
-					pointB.y += 14;
 				pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 80f, -99999, pointA.y));
 				LinkType = 3;
 			}
@@ -213,7 +226,7 @@ public class NodeLink{
 		if (Vector2.Distance (pointA, pointC) > 1f)
 			Handles.DrawBezier (pointA, pointC, pointA, pointC, arrowColors [LinkType % 2], null, 2f);
 		Handles.DrawBezier (pointC, pointB, tan0, tan1, arrowColors [LinkType % 2], null, 2f);
-		GUI.DrawTexture (new Rect (pointB + 8f * LinkDirect [LinkType] - 0.5f * arrowSize, arrowSize), tex_arrows [LinkType]);
+		GUI.DrawTexture (new Rect (pointB - (9f * LinkDirect [LinkType]) - (0.5f * arrowSize), arrowSize), tex_arrows [LinkType]);
 		GUI.DrawTexture (rectEdit, tex_edits [LinkType % 2]);
 	}
 
@@ -387,6 +400,7 @@ public class Character{
 	}
 }
 
+/*
 public class PopUpWindow{
 	Rect windowRect;
 
@@ -402,7 +416,85 @@ public class PopUpWindow{
 	public virtual void HitTest(){
 		
 	}
+}*/
+
+#endregion
+
+#region 右面版相關
+public class RightPanel{
+	Texture2D tex_box, tex_scrollbar, tex_scroller, tex_extent, tex_unextent;
+	Rect boxRect = new Rect (0, 0, 255, 70),
+	scrollbarRect = new Rect(0, 0, 12, 300), 
+	scrollerRect = new Rect(0, 2, 9, 300),
+	extentRect = new Rect (0, 0, 255, 15);
+	bool extent = false;
+	float contentHeight = 50;
+
+	public RightPanel(){
+		SetTexture (ref tex_box, new Color (0.1f, 0.1f, 0.1f, 0.7f));
+		SetTexture (ref tex_scrollbar, new Color (0.1f, 0.1f, 0.1f, 1));
+		SetTexture (ref tex_scroller, new Color (0.35f, 0.35f, 0.35f, 1));
+		tex_extent = Resources.Load<Texture2D> ("GUISkin/extent");
+		tex_unextent = Resources.Load<Texture2D> ("GUISkin/unextent");
+	}
+
+	public void DrawSelf(Vector2 windowSize){
+		AdjustRects (windowSize);
+		GUI.DrawTexture (boxRect, tex_box);
+		GUI.DrawTexture (extentRect, extent ? tex_unextent : tex_extent);
+		if (extent) {
+			GUI.DrawTexture (scrollbarRect, tex_scrollbar);
+			//if (contentHeight > windowSize.y)
+				GUI.DrawTexture (scrollerRect, tex_scroller);
+		}
+			
+	}
+
+	public bool HitTest(Vector2 mousePos){
+		if (mousePos.x > boxRect.x) {
+			if (extent || mousePos.y < 85) {
+				Hit (mousePos);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void Hit(Vector2 mousePos){
+		if (extentRect.Contains (mousePos))
+			extent = !extent;
+		GUI.changed = true;
+	}
+
+	void SetTexture(ref Texture2D _tex, Color _c){
+		_tex = new Texture2D (1, 1);
+		_tex.SetPixel (0, 0, _c);
+		_tex.Apply ();
+	}
+
+	void AdjustRects(Vector2 windowSize){
+		boxRect.x = windowSize.x - 250;
+		boxRect.height = extent ? windowSize.y : 70;
+		extentRect.x = boxRect.x;
+		extentRect.y = extent ? windowSize.y - 15 : 70;
+
+		if (extent) {
+			scrollbarRect.x = windowSize.x - 12;
+			scrollbarRect.height = windowSize.y - 15;
+
+			scrollerRect.x = scrollbarRect.x+1;
+			scrollerRect.height = 300;
+			if (contentHeight > windowSize.y) {
+				scrollerRect.x = scrollbarRect.x;
+				scrollerRect.height = windowSize.y / contentHeight;
+			}
+
+		}
+	}
 }
 
+public class Dialogue{
+	public string content = "Hello world!";
+}
 #endregion
 
