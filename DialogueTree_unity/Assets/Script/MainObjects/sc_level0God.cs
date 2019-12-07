@@ -9,7 +9,7 @@ public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
 	#region 全域變數
 
 	[SerializeField]
-	sc_talkNPC Ah_Kai, Ning, Ning_Run, Lee;
+	sc_talkNPC Kai, Lee;
 
 	#endregion
 
@@ -17,11 +17,13 @@ public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
 		StoryPoint.Clear ();
 		sc_God.RegisterListener (this);
 		sc_Area.RegisterListener (this);
-		ChangeStoryState(State.李哥N1N9);
-
+		//ChangeStoryState(State.李哥N1N9);
+		Kai.StartTalkNpcSequence(new string[]{"Wait(0.1)", "Move(X0.5Y0)"});
+		Lee.StartTalkNpcSequence(new string[]{"Wait(5)", "Talk"});
 	}
 
-	public void ChangeArea(string _nowArea){
+	public void ChangeArea(string _key){
+		
 	}
 
 	public void PointAdd(string _key){
@@ -33,12 +35,6 @@ public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
 
 	public void PointRemove(string _key){
 		switch (_key) {
-		case "NoHu":
-			SetStoryPoint ("FindHu", true);
-			break;
-		case "LockShot":
-			MainCam.scCam.SetFollowTarget (true);
-			break;
 		default:
 			break;
 		}

@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - God
   layers:
   - Default
   - TransparentFX
@@ -15,17 +16,17 @@ TagManager:
   - 
   - 
   - 
+  - Player
+  - Enemy
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - NPC
+  - Interactable
+  - InfoObject
+  - Wall
+  - Stairs
+  - Floor
+  - Area
   - 
   - 
   - 

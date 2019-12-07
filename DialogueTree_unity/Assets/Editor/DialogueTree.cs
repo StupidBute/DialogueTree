@@ -7,8 +7,8 @@ public class DialogueTree : EditorWindow {
 	GUIStyle nameStyle;
 	Texture2D tex_bg, tex_left, tex_add;
 
-	enum WindowState{normal, drag, popup, link};
-	WindowState nowState = WindowState.normal;
+	public enum WindowState{normal, drag, popup, link, scroll};
+	public WindowState nowState = WindowState.normal;
 
 	public enum ClickType{node, leftPanel, rightPanel, popup}
 	public LeftPanel leftPanel;
@@ -140,7 +140,15 @@ public class DialogueTree : EditorWindow {
 				ResetSelect ();
 			}
 			break;
+		case WindowState.scroll:
+			if (e.type == EventType.MouseDrag)
+				rightPanel.Scroll (e.delta.y);
+			else if (e.type == EventType.MouseUp)
+				nowState = WindowState.normal;
+			break;
 		}
+		if (nowState != WindowState.scroll && e.type == EventType.ScrollWheel)
+			rightPanel.Scroll (e);
 	}
 
 	void Link(Vector2 pointA, Vector2 pointB){
@@ -166,6 +174,7 @@ public class DialogueTree : EditorWindow {
 			menu.AddDisabledItem (new GUIContent ("Delete"));
 		menu.ShowAsContext ();
 	}
+
 	void CreateNode(Vector2 mousePos, int type){
 		Node n = null;
 		if (lst_Node.Count == 0)
