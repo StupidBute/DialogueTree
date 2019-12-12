@@ -13,7 +13,6 @@ public class sc_Option : MonoBehaviour {
 	Animator anim;
 	char[] optionSpliter = new char[]{'_'};
 	Text[] optionTxt = new Text[4];
-	string[] emotionStr = new string[]{"愉快", "不悅", "難過", "一般"};
 	Vector2 originRectScale;
 	Coroutine lastCoroutine = null;
 
@@ -29,20 +28,9 @@ public class sc_Option : MonoBehaviour {
 		optionLine = transform.GetChild (4).gameObject;
 	}
 
-	public void ChooseAnswer(List<string> _option){
-		
-		if (sc_factoryGod.StoryState == sc_factoryGod.State.戴勇誠All || sc_factoryGod.StoryState == sc_factoryGod.State.蔣瑜涵All ||
-		    sc_factoryGod.StoryState == sc_factoryGod.State.董欣麗All || sc_factoryGod.StoryState == sc_factoryGod.State.陳漢辰All) {
-			transform.localScale = new Vector2 (0.515f, 0.515f);
-			transform.localPosition = new Vector2 (-1.2f, 2.2f);
-		}else if (sc_God.StoryState == sc_God.State.李哥N1N9) {
-			transform.localPosition = new Vector2 (-1.6f, 1.08f);
-		}else{
-			//transform.localScale = new Vector2 (0.6f, 0.6f);
-			transform.localPosition = new Vector2 (-1.22f, 2.42f);
-		}
-			
-		lastCoroutine = StartCoroutine (IE_ChooseAnswer (_option));
+	public void ChooseAnswer(List<Option> lst_option){
+		transform.localPosition = new Vector2 (-1.22f, 2.42f);
+		lastCoroutine = StartCoroutine (IE_ChooseAnswer (lst_option));
 	}
 
 	public void CloseQuestion(){
@@ -53,11 +41,9 @@ public class sc_Option : MonoBehaviour {
 		}
 	}
 
-	IEnumerator IE_ChooseAnswer(List<string> _option){
-
-		int index0 = -1, index1 = -1;
-		int optionCount = _option.Count;
-		int[] optionOrder = new int[]{ 0, 2, 1, 3 };
+	IEnumerator IE_ChooseAnswer(List<Option> lst_option){
+		int index = -1;
+		int optionCount = lst_option.Count;
 
 		//打開選項
 		transform.localPosition = (myPlayer.position.x < cam.transform.position.x) ? 
@@ -68,105 +54,45 @@ public class sc_Option : MonoBehaviour {
 		for (int i = 0; i < 4; i++) {
 			optionTxt [i].color = new Color(1, 1, 1, 0);
 			if (i < optionCount) {
-				optionTxt[optionOrder[i]].text = _option[i];
-				myOptions [optionOrder[i]].SetActive (true);
+				optionTxt [i].text = lst_option [i].text;
+				myOptions [i].SetActive (true);
 			}else
-				myOptions [optionOrder[i]].SetActive (false);
+				myOptions [i].SetActive (false);
 		}
 		anim.SetBool ("activate", true);
 		yield return new WaitForSeconds (0.45f);
 		yield return StartCoroutine (FadeTxt (true));
 
 		#region 選選項
-		while (index0 == -1 || index1 == -1) {
-			
-			GameObject pointedOption = null;
-			bool mouseControl = true;
-			Vector3 pre_mousePos = Input.mousePosition;
+		GameObject pointedOption = null;
+		bool mouseControl = true;
+		Vector3 pre_mousePos = Input.mousePosition;
+		while (index == -1) {			//選擇第一層選項
+			PointMyOption(ref pointedOption, ref mouseControl, ref pre_mousePos);
 
-			#region 第一層選項
-			while (index0 == -1) {			//選擇第一層選項
-				PointMyOption(ref pointedOption, ref mouseControl, ref pre_mousePos);
-
-				if (pointedOption != null){
-					if (Input.GetMouseButtonDown (0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E))
-						index0 = int.Parse (pointedOption.name.Split (optionSpliter) [0]);
-					else
-						ScaleOptions(pointedOption.transform);
-				}else{
-					ScaleOptions();
-				}
-
-				yield return null;
-			}
-			//已選擇第一層選項，打開第二層
-			for(int i = 0; i < 4; i++)
-				myOptions[i].transform.DOScale(originRectScale, 0.3f);
-			
-			anim.SetTrigger ("change");
-			yield return new WaitForSeconds (0.2f);
-			yield return StartCoroutine (FadeTxt (false));
-			for(int i = 0; i < 4; i++){
-				myOptions [i].SetActive (true);
-				optionTxt [i].text = emotionStr [i];
-			}
-			yield return new WaitForSeconds (0.8f);
-			yield return StartCoroutine (FadeTxt (true));
-			#endregion
-
-			#region 第二層選項
-			mouseControl = true;
-			while (index1 == -1) {			//選擇情緒
-				if (Input.GetMouseButtonDown (1) || Input.GetKeyDown(KeyCode.Q)) {
-					index0 = -1;
-					break;
-				}
-
-				PointMyOption(ref pointedOption, ref mouseControl, ref pre_mousePos);
-
-				if(pointedOption != null){
-					if (Input.GetMouseButtonDown (0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E))
-						index1 = int.Parse (pointedOption.name.Split (optionSpliter) [1]);
-					else
-						ScaleOptions(pointedOption.transform);
-				} else{
-					ScaleOptions();
-				}
-
-				yield return null;
-			}
-			for(int i = 0; i < 4; i++)
-				myOptions[i].transform.DOScale(originRectScale, 0.3f);
-			
-			if(index0 == -1){
-				anim.SetTrigger("changeBack");
-				yield return new WaitForSeconds (0.2f);
-				yield return StartCoroutine (FadeTxt (false));
-				for (int i = 0; i < 4; i++) {
-					if (i < optionCount) {
-						optionTxt[optionOrder[i]].text = _option[i];
-						myOptions [optionOrder[i]].SetActive (true);
-					}else
-						myOptions [optionOrder[i]].SetActive (false);
-				}
-				yield return new WaitForSeconds (1f);
-				yield return StartCoroutine (FadeTxt (true));
+			if (pointedOption != null){
+				if (Input.GetMouseButtonDown (0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E))
+					index = int.Parse (pointedOption.name.Split (optionSpliter) [0]);
+				else
+					ScaleOptions(pointedOption.transform);
 			}else{
-				anim.SetBool ("activate", false);
-				yield return StartCoroutine (FadeTxt (false));
-				yield return new WaitForSeconds (0.5f);
+				ScaleOptions();
 			}
 
-			#endregion
+			yield return null;
 		}
+		for(int i = 0; i < 4; i++)
+			myOptions[i].transform.DOScale(originRectScale, 0.3f);
+		anim.SetBool ("activate", false);
+		yield return StartCoroutine (FadeTxt (false));
+		yield return new WaitForSeconds (0.5f);
 		#endregion
 
 		//關閉全部選項
 		optionLine.SetActive(false);
 		for (int i = 0; i < 4; i++)		
 			myOptions [i].SetActive (false);
-		Answer = 4*index0 + index1;		//回傳npc回話的索引值
-
+		Answer = index;
 	}
 
 	IEnumerator FadeTxt(bool _fadeIn){

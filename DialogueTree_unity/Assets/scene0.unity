@@ -640,7 +640,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22d18b0a984d19848a2d32241e91d465, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myName: "\u674E\u5F97\u52DD"
+  myName: "\u738B\u4F2F\u4F2F"
 --- !u!212 &140689020
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1203,7 +1203,7 @@ GameObject:
   - component: {fileID: 343401519}
   - component: {fileID: 343401518}
   m_Layer: 5
-  m_Name: 2_1_MadRect
+  m_Name: 0_option
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1222,7 +1222,7 @@ Transform:
   m_Children:
   - {fileID: 1364010265}
   m_Father: {fileID: 1465187577}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!60 &343401518
 PolygonCollider2D:
@@ -2956,7 +2956,7 @@ GameObject:
   - component: {fileID: 907377187}
   - component: {fileID: 907377186}
   m_Layer: 5
-  m_Name: 3_3_normalRect
+  m_Name: 2_option
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2975,7 +2975,7 @@ Transform:
   m_Children:
   - {fileID: 460237907}
   m_Father: {fileID: 1465187577}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 270}
 --- !u!60 &907377186
 PolygonCollider2D:
@@ -3236,7 +3236,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 981902751}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11.95, y: 0, z: 0}
+  m_LocalPosition: {x: 1.4, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1889311170}
@@ -3300,7 +3300,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22d18b0a984d19848a2d32241e91d465, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myName: "\u8449\u52DD\u51F1"
+  myName: "\u5F35\u5927\u5922"
 --- !u!95 &981902756
 Animator:
   serializedVersion: 3
@@ -4530,6 +4530,11 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 114967224817466382, guid: 819e8eec0b4be63499c611767c1250c8,
+        type: 2}
+      propertyPath: ReadFileNames.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4481138627829704, guid: 819e8eec0b4be63499c611767c1250c8, type: 2}
       propertyPath: m_LocalPosition.x
       value: -3.03
@@ -4577,6 +4582,31 @@ Prefab:
       propertyPath: Kai
       value: 
       objectReference: {fileID: 981902754}
+    - target: {fileID: 114431868967873424, guid: 819e8eec0b4be63499c611767c1250c8,
+        type: 2}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 1792211117}
+    - target: {fileID: 114431868967873424, guid: 819e8eec0b4be63499c611767c1250c8,
+        type: 2}
+      propertyPath: SceneFadeImage
+      value: 
+      objectReference: {fileID: 1534642473}
+    - target: {fileID: 114431868967873424, guid: 819e8eec0b4be63499c611767c1250c8,
+        type: 2}
+      propertyPath: nextScene
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 114967224817466382, guid: 819e8eec0b4be63499c611767c1250c8,
+        type: 2}
+      propertyPath: scOpt
+      value: 
+      objectReference: {fileID: 1465187579}
+    - target: {fileID: 114967224817466382, guid: 819e8eec0b4be63499c611767c1250c8,
+        type: 2}
+      propertyPath: ReadFileNames.Array.data[0]
+      value: newdialogue
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 819e8eec0b4be63499c611767c1250c8, type: 2}
   m_IsPrefabParent: 0
@@ -5509,10 +5539,10 @@ Transform:
   m_LocalPosition: {x: -1.62, y: 2.85, z: 0}
   m_LocalScale: {x: 0.6, y: 0.6, z: 1}
   m_Children:
-  - {fileID: 2083070422}
   - {fileID: 343401517}
   - {fileID: 2029538837}
   - {fileID: 907377185}
+  - {fileID: 2083070422}
   - {fileID: 1133978364}
   m_Father: {fileID: 1582199569}
   m_RootOrder: 1
@@ -5828,6 +5858,12 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
+--- !u!114 &1534642473 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114694049970125276, guid: 819e8eec0b4be63499c611767c1250c8,
+    type: 2}
+  m_PrefabInternal: {fileID: 1281012956}
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &1558237770
 GameObject:
   m_ObjectHideFlags: 0
@@ -6787,6 +6823,12 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
+--- !u!114 &1792211117 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114213902807561532, guid: 819e8eec0b4be63499c611767c1250c8,
+    type: 2}
+  m_PrefabInternal: {fileID: 1281012956}
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &1841914918
 GameObject:
   m_ObjectHideFlags: 0
@@ -7239,6 +7281,23 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1905818669}
+--- !u!1 &1982895682 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1933370237688054, guid: 819e8eec0b4be63499c611767c1250c8,
+    type: 2}
+  m_PrefabInternal: {fileID: 1281012956}
+--- !u!114 &1982895683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1982895682}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78e69e936e13ff84eb695d450231b741, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  filename: newdialogue
 --- !u!1 &2009935127
 GameObject:
   m_ObjectHideFlags: 0
@@ -7403,7 +7462,7 @@ GameObject:
   - component: {fileID: 2029538839}
   - component: {fileID: 2029538838}
   m_Layer: 5
-  m_Name: 1_2_SadRect
+  m_Name: 1_option
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7422,7 +7481,7 @@ Transform:
   m_Children:
   - {fileID: 370830522}
   m_Father: {fileID: 1465187577}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!60 &2029538838
 PolygonCollider2D:
@@ -7680,7 +7739,7 @@ GameObject:
   - component: {fileID: 2083070424}
   - component: {fileID: 2083070423}
   m_Layer: 5
-  m_Name: 0_0_JoyRect
+  m_Name: 3_option
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7699,7 +7758,7 @@ Transform:
   m_Children:
   - {fileID: 1156889015}
   m_Father: {fileID: 1465187577}
-  m_RootOrder: 0
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 180}
 --- !u!60 &2083070423
 PolygonCollider2D:

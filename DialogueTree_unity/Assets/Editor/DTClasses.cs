@@ -151,7 +151,7 @@ public class DialogueNode : Node{
 		nodeName = "新對話集";
 		DTGod = _dt;
 		myCharacter = DTGod.lst_chars [0];
-		lst_dial.Add (new Dialog (new string[]{ "idle", "12", "0", "X" }, ""));
+		lst_dial.Add (new Dialog ("idle/12/0/X", ""));
 	}
 
 	override public void DrawSelf(Vector2 coordinate){
@@ -708,7 +708,7 @@ public class RightPanel{
 			for (int i = 0; i < n.lst_dial.Count; i++)
 				DrawDialogue (n, i);
 			if (GUI.Button (new Rect (5, contentRect.height, 230, 40), "新增對話", style_button))
-				n.lst_dial.Add (new Dialog (new string[]{ "idle", "12", "0", "X" }, ""));
+				n.lst_dial.Add (new Dialog ("idle/12/0/X", ""));
 			contentRect.height += 50;
 			GUI.changed = true;
 		}
@@ -759,7 +759,7 @@ public class RightPanel{
 		GenericMenu menu = new GenericMenu ();
 		menu.AddItem (new GUIContent ("Delete"), false, () => n.lst_dial.RemoveAt (index));
 		menu.AddItem (new GUIContent ("Insert New"), false, 
-			() => n.lst_dial.Insert (index + 1, new Dialog (new string[] { "idle", "12", "0", "X" }, "")));
+			() => n.lst_dial.Insert (index + 1, new Dialog ("idle/12/0/X", "")));
 		menu.ShowAsContext ();
 	}
 	#endregion

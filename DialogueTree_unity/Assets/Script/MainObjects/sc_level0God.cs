@@ -6,24 +6,26 @@ using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
 public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
-	#region 全域變數
 
 	[SerializeField]
 	sc_talkNPC Kai, Lee;
-
-	#endregion
 
 	void Start(){
 		StoryPoint.Clear ();
 		sc_God.RegisterListener (this);
 		sc_Area.RegisterListener (this);
+		StartCoroutine (WaitTalk ());
 		//ChangeStoryState(State.李哥N1N9);
-		Kai.StartTalkNpcSequence(new string[]{"Wait(0.1)", "Move(X0.5Y0)"});
-		Lee.StartTalkNpcSequence(new string[]{"Wait(5)", "Talk"});
+		//Kai.StartTalkNpcSequence(new string[]{"Wait(0.1)", "Move(X0.5Y0)"});
+		//Lee.StartTalkNpcSequence(new string[]{"Wait(5)", "Talk"});
 	}
 
+	#region listener functions
 	public void ChangeArea(string _key){
-		
+		switch (_key) {
+		default:
+			break;
+		}
 	}
 
 	public void PointAdd(string _key){
@@ -39,6 +41,7 @@ public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
 			break;
 		}
 	}
+	#endregion
 
 	protected override void Update () {
 		base.Update ();
@@ -65,6 +68,11 @@ public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
 			break;
 		}
   	}
+
+	IEnumerator WaitTalk(){
+		yield return new WaitForSeconds (1);
+		dialGod.StartPlot ("劇情1");
+	}
 
 	IEnumerator StorySequence(){
 		switch (StoryState) {

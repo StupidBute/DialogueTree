@@ -12,8 +12,6 @@ public class sc_NpcDialog : MonoBehaviour {
 	const float dialogBox_Yscale = 0.0078f;
 
 	public string myName;
-
-	public DialogSheet mySheet;
 	[System.NonSerialized]
 	public GameObject myGod;
 	[System.NonSerialized]
@@ -30,10 +28,8 @@ public class sc_NpcDialog : MonoBehaviour {
 	Camera cam;
 	Color boxColor;
 
-	string nowDialKey = "", finishedDialKey = "";
+	//string nowDialKey = "", finishedDialKey = "";
 	int intimacy = 0;
-	bool clickNextDialogue = false;
-	bool textRun2End = false;
 	[System.NonSerialized]
 	public bool isRightBox = true;
 
@@ -52,8 +48,6 @@ public class sc_NpcDialog : MonoBehaviour {
 		scOutline = tr_BoxOutline.GetComponent<sc_BoxOutline> ();
 		spr_DialogBox = tr_DialogBox.GetComponent<SpriteRenderer> ();
 		boxColor = spr_DialogBox.color;
-		if(scGod.dc_DialogSheet.ContainsKey(myName))
-			mySheet = scGod.dc_DialogSheet [myName];
 		scGod.NpcRegister (myName, this);
 		cam = Camera.main;
 		tr_DialogBox.gameObject.SetActive (false);
@@ -61,153 +55,82 @@ public class sc_NpcDialog : MonoBehaviour {
 	}
 	#endregion
 
-
 	#region 跑對話
-	public void StartSheetAt(string dialogKey){
-		SetNowDialog (dialogKey);
-		RunSheet ();
+	public void StartDialogue(DialogueSet _dialogue){
+		StartCoroutine(TalkMultiDialog(_dialogue));
 	}
 
-	public void RunSheet(){
-		//若下一句為分歧點，則依照分歧點的規則賦予正確的下一句對話引導
-		if (mySheet.diverges.ContainsKey (mySheet.nowDialog))
-			FindDivergeKey ();
-
-		if (mySheet.dialogs.ContainsKey (mySheet.nowDialog)) {
-			StartCoroutine(RunMultiDialog(mySheet.dialogs[mySheet.nowDialog]));
-		} else if (mySheet.questions.ContainsKey (mySheet.nowDialog)) {
-			StartCoroutine (AskQuestion (mySheet.questions[mySheet.nowDialog]));
-		} else {
-			//print (myName + "無" + mySheet.nowDialog + "對話。");
-		}
-
+	public void StartDialogue(Question _question){
+		StartCoroutine (AskQuestion (_question));
 	}
 
-	public void Wait2Start(float _t, string dialKey){
-		StartCoroutine (IE_Wait2Start (_t, dialKey));
-	}
-
-	IEnumerator IE_Wait2Start(float _t, string dialKey){
-		yield return new WaitForSeconds (_t);
-		if (dialKey == "")
-			RunSheet ();
-		else
-			StartSheetAt (dialKey);
-	}
-
-	IEnumerator RunMultiDialog(List<Dialog> list_dial){
-		nowDialKey = mySheet.nowDialog;
-		int lastIndex = list_dial.Count - 1;
-		SetNowDialog (list_dial [lastIndex].nextDialog);	//準備好下一句對話
-		for (int i = 0; i <= lastIndex; i++) {
-			#region 顯示此句對話
-			Dialog nowTalk = list_dial [i];
-			TalkDialog (nowTalk, !DialogObj.activeSelf);
-			if (!(i == lastIndex && mySheet.questions.ContainsKey (mySheet.nowDialog))) {
-				//此句不是問句
-				while (!clickNextDialogue) {
-					if (textRun2End && (Input.GetMouseButtonDown (0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E))) {
-						RaycastHit2D hit = MouseClick (Input.mousePosition);
-						if (hit.collider == null)
-							clickNextDialogue = true;
-					}
-					yield return null;
+	IEnumerator TalkMultiDialog(DialogueSet _dialSet){
+		for(int i = 0; i < _dialSet.dialogs.Count; i++) {
+			yield return StartCoroutine(IE_TalkDialog (_dialSet.dialogs[i], !DialogObj.activeSelf));
+			bool clickNextDialogue = false;
+			while (!clickNextDialogue) {
+				if (Input.GetMouseButtonDown (0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E)) {
+					RaycastHit2D hit = MouseClick (Input.mousePosition);
+					if (hit.collider == null)	//沒有點擊到其他UI則繼續對話
+						clickNextDialogue = true;
 				}
-				textRun2End = false;
-				clickNextDialogue = false;
-
-			} else {
-				WaitForSeconds waitTime = new WaitForSeconds(0.1f);
-				while (!textRun2End)
-					yield return waitTime;
-				textRun2End = false;
+				yield return null;
 			}
-			#endregion
-
-			#region 判斷已跑到此對話集的最後一句
-			if (i == lastIndex){
-				finishedDialKey = nowDialKey;
-				//若下一句為分歧點，則依照分歧點的規則賦予正確的下一句對話引導
-				if(mySheet.diverges.ContainsKey(mySheet.nowDialog))
-					FindDivergeKey ();
-
-				if (mySheet.nowDialog != "END") {
-					string[] dialogStr = mySheet.nowDialog.Split (new char[]{ ':' });
-					switch (dialogStr.Length) {
-					case 1:
-						RunSheet ();
-						break;
-					case 2:
-						scGod.StartNpcDialog (dialogStr);
-						StartCoroutine(IE_AnimOpenDialog(animType.End, 0f, 0f, null));
-						break;
-					case 3:
-						scGod.StartNpcDialog (dialogStr);
-						if (dialogStr [2] == "REST")
-							TalkDialog(new Dialog(new string[]{"MM0", "16", "0", "X", "RESTING"}, "..."), false);
-						else
-							StartCoroutine (IE_AnimOpenDialog (animType.End, 0f, 0f, null));
-
-						break;
-					default:
-						scGod.DebugTextPrint ("對話引導的屬性數量錯誤!你打的是: " + mySheet.nowDialog.ToString ());
-						break;
-					}
-						
-				} else {
-					StartCoroutine (IE_AnimOpenDialog (animType.End, 0f, 0f, null));
-
-				}
-
-			}
-			#endregion
-
 		}
+		StartNextDialogue(_dialSet.nextKey);
 	}
 
 	IEnumerator AskQuestion(Question nowQuestion){
+		yield return StartCoroutine (IE_TalkDialog (nowQuestion.questionDial, !DialogObj.activeSelf));
 		//問問題並等待玩家回答
 		WaitForSeconds waitTime = new WaitForSeconds(0.2f);
-		scGod.scOpt.ChooseAnswer (nowQuestion.option);
+		scGod.scOpt.ChooseAnswer (nowQuestion.options);
 		while (scGod.scOpt.Answer == -1)			//玩家還沒回答則持續等待
 			yield return waitTime;
 		//玩家已回答，顯示npc應答
-		mySheet.RecordAnswer(mySheet.nowDialog, scGod.scOpt.Answer);
+		nowQuestion.answer = scGod.scOpt.Answer;
+		string nextKey = nowQuestion.options [scGod.scOpt.Answer].nextKey;
+		//char[] splitter = new char[]{':'};
+		//string[] dialogStr = nextKey.Split(splitter);
 
-		int index0 = scGod.scOpt.Answer / 4;
-		int index1 = scGod.scOpt.Answer % 4;
-		if (nowQuestion.ansDialog [index0].Count == 1) {
-			//無分歧問答集
-			StartCoroutine (RunMultiDialog (nowQuestion.ansDialog [index0][0].questionUnit[index1]));
-		} else {
-			//分歧問答集
-			foreach (DivergeQuestion DQ in nowQuestion.ansDialog [index0]) {
-				if (JudgeCondition (DQ.conditions)) {
-					StartCoroutine (RunMultiDialog (DQ.questionUnit[index1]));
-					break;
-				}
-			}
-		}
+		scGod.StartNpcDialogue (nextKey);
 		scGod.scOpt.Answer = -1;
 
 	}
 
+	void StartNextDialogue(string _key){
+		if(_key != "END") {
+			_key = scGod.DoDiverge(_key);
+			char[] splitter = new char[]{':'};
+			string[] keyStr = _key.Split(splitter);
+			string nextnextKey = scGod.StartNpcDialogue(_key);
+
+			//若下一句不是自己講的
+			if(keyStr[0] != myName){
+				keyStr = nextnextKey.Split (splitter);	//檢查下下一句是否是自己講的，是則啟用REST狀態，否則關閉對話框
+				if(keyStr[0] == myName)
+					StartCoroutine(IE_TalkDialog(new Dialog("MM0/16/0/REST", "..."), false));
+				else
+					StartCoroutine (IE_AnimOpenDialog (animType.End, 0f, 0f, null));
+			}
+
+		} else
+			StartCoroutine (IE_AnimOpenDialog (animType.End, 0f, 0f, null));
+	}
 	#endregion
 
-
 	#region 顯示對話
-
-	void TalkDialog(Dialog _dial, bool isFirst){
+	IEnumerator IE_TalkDialog(Dialog _dial, bool isFirst){
 		myDialog.text = "";
 		intimacy += _dial.intimacy;
 		if (_dial.animKey != "MM0")
 			scTalk.SetTalkAnim (_dial.animKey);
 		DoCommand (_dial.command);
-		StartCoroutine (TextEffect (_dial, isFirst));
+		yield return StartCoroutine (TextEffect (_dial, isFirst));
 	}
 
 	IEnumerator TextEffect(Dialog _dial, bool isFirst){
-		bool isResting = _dial.nextDialog == "RESTING";
+		bool isResting = _dial.command == "REST";
 		#region 決定對話框大小
 		float _width = 0f, _height = 0f, boxMargin = 0f, box_width = 0f, box_height = 0f;
 		if(isResting){
@@ -256,7 +179,6 @@ public class sc_NpcDialog : MonoBehaviour {
 				yield return StartCoroutine(IE_AnimOpenDialog(animType.Update, box_width, box_height, _dial));
 			}else{
 				yield return StartCoroutine(IE_AnimOpenDialog(animType.Jump, box_width, box_height, _dial));
-				textRun2End = true;
 				yield break;
 				//不跑字
 			}
@@ -264,7 +186,6 @@ public class sc_NpcDialog : MonoBehaviour {
 		#endregion
 
 		#region 跑字
-		//WaitForSeconds waitLetterTime = new WaitForSeconds(letterTime);
 		if(sc_God.fastDial){
 			myDialog.text = _dial.text;
 			yield return null;
@@ -275,12 +196,8 @@ public class sc_NpcDialog : MonoBehaviour {
 				outputStr += letter.ToString();
 				myDialog.text = outputStr;
 				yield return null;
-				//yield return waitLetterTime;
 			}
 		}
-
-		if(!isResting)
-			textRun2End = true;
 		#endregion
 	}
 
@@ -384,7 +301,7 @@ public class sc_NpcDialog : MonoBehaviour {
 	}
 
 	void DoCommand(string _command){
-		if (_command == "X")
+		if (_command == "X" || _command == "REST")
 			return;
 		string[] criticalStr = _command.Split (new char[]{ ';' });
 		char[] keySplitter = new char[]{ ':' };
@@ -405,7 +322,7 @@ public class sc_NpcDialog : MonoBehaviour {
 			switch (funcStr [0]) {
 			case "Face":
 				if (funcStr.Length != 2){
-					scGod.DebugTextPrint ("函式參數數量錯誤!(" + (funcStr.Length-1).ToString () + ") Face函式需要1個參數。\n此句你打的是: " + criticStr);
+					print ("函式參數數量錯誤!(" + (funcStr.Length-1).ToString () + ") Face函式需要1個參數。\n此句你打的是: " + criticStr);
 				}else{
 					if (funcStr [1] == "Player")
 						owner.FaceTalker (scGod.playerTR);
@@ -416,7 +333,7 @@ public class sc_NpcDialog : MonoBehaviour {
 				break;
 			case "Move":
 				if (!(funcStr.Length == 2 || funcStr.Length == 3)) {
-					scGod.DebugTextPrint ("函式參數數量錯誤!(" + (funcStr.Length-1).ToString() + ") Move函式需要1或2個參數。\n此句你打的是: " + criticStr);
+					print ("函式參數數量錯誤!(" + (funcStr.Length-1).ToString() + ") Move函式需要1或2個參數。\n此句你打的是: " + criticStr);
 				} else {
 					if (funcStr.Length == 2) {
 						string[] vectorStr = funcStr [1].Split (vecSplitter, System.StringSplitOptions.RemoveEmptyEntries);
@@ -452,195 +369,20 @@ public class sc_NpcDialog : MonoBehaviour {
 		} else {
 			float num = 0;
 			if (!float.TryParse (posXStr, out num))
-				scGod.DebugTextPrint ("Move函式的參數設定錯誤! 你打的參數是: " + posXStr);
+				print ("Move函式的參數設定錯誤! 你打的參數是: " + posXStr);
 			return num;
 		}
 	}
 
 	#endregion
 
-
-	#region 分歧點相關
-	void FindDivergeKey(){
-		string divergeDialKey = mySheet.nowDialog;
-		int maximum = 0;
-		//持續分解Diverge，直到找出不是Diverge的對話引導，才賦予給nowDialog
-		do{
-			maximum++;
-			divergeDialKey = DoDiverge(mySheet.diverges[divergeDialKey]);
-		}while(mySheet.diverges.ContainsKey(divergeDialKey) && maximum < 20);
-
-		SetNowDialog(divergeDialKey);
-  	}
-
-	string DoDiverge(List<DivergeUnit> paths){
-		foreach (DivergeUnit unit in paths) {
-			if (JudgeCondition (unit.conditions))
-				return unit.nextDialKey;
-		}
-		return "END";
-	}
-
-	bool JudgeCondition(List<string> conditions){
-		char[] AndSpliter = new char[]{ '+' };
-
-		foreach (string _condition in conditions) {
-			//進入每個or的條件
-			if (_condition == "//")
-				break;
-			
-			string[] conditionAnd = _condition.Split (AndSpliter);
-			if (conditionAnd.Length > 1) {
-				//有and的條件
-				bool conditionPass = true;
-				foreach (string _and in conditionAnd) {
-					if (!JudgeSingleCondition (_and)) {
-						conditionPass = false;
-						break;
-					}
-				}
-				if (conditionPass)
-					return true;
-			} else {
-				//單一條件
-				if (JudgeSingleCondition (_condition))
-					return true;
-			}
-
-		}
-		return false;
-	}
-
-	bool JudgeSingleCondition(string _condition){
-		char[] conditionSpliter = new char[]{':'};
-		char[] caseSpliter = new char[]{','};
-
-		string[] conditionStr = _condition.Split (conditionSpliter, System.StringSplitOptions.RemoveEmptyEntries);
-		if (conditionStr.Length == 3) {
-			//角色:問題:答案
-			string[] possibleAnswers = conditionStr [2].Split (caseSpliter, System.StringSplitOptions.RemoveEmptyEntries);
-			string playerAnswer = scGod.GetNpcDialog(conditionStr[0]).mySheet.GetAnswer(conditionStr[1]);
-			foreach (string answerKey in possibleAnswers) {
-				if(answerKey == "All" && playerAnswer != "")
-					return true;
-				else if (playerAnswer == answerKey)
-					return true;
-			}
-		} else if (conditionStr.Length == 2) {
-			//Emo:心情(運算子)數量
-			//Plot:劇情開關代碼
-			if (conditionStr [0] == "Emo") {
-				#region 情緒數量判斷
-				char[] _con = conditionStr [1].ToCharArray ();
-				string emo = _con [0].ToString ();
-				string oper = "";	//運算子
-				int compareCount = 0;
-				string[] involvingNpcs = new string[]{ "" };
-				if (myName == "葉宜樺")
-					involvingNpcs = new string[]{ "戴勇誠", "蔣瑜涵", "董欣麗", "陳漢辰" };
-
-				for (int i = 1; i < _con.Length; i++) {
-					int num = 0;
-					if (!int.TryParse (_con [i].ToString (), out num)) {
-						if (i == _con.Length - 1 && _con [i] == '%') {
-							int allEmoCount = GetEmoCountByArray ("J", involvingNpcs) + GetEmoCountByArray ("M", involvingNpcs)
-								+ GetEmoCountByArray ("S", involvingNpcs) + GetEmoCountByArray ("N", involvingNpcs);
-							compareCount = (int)Mathf.Round ((float)allEmoCount * (float)compareCount / 100f);
-						} else {
-							oper += _con [i].ToString ();
-						}
-					} else {
-						compareCount = compareCount * 10 + num;
-					}
-
-				}
-				int emoCount = 0;
-				if (involvingNpcs [0] != "")
-					emoCount = GetEmoCountByArray (emo, involvingNpcs);
-
-				switch (oper) {
-				case "=":
-					if (emoCount == compareCount)
-						return true;
-					break;
-				case "==":
-					if (emoCount == compareCount)
-						return true;
-					break;
-				case ">":
-					if (emoCount > compareCount)
-						return true;
-					break;
-				case ">=":
-					if (emoCount >= compareCount)
-						return true;
-					break;
-				case "<":
-					if (emoCount < compareCount)
-						return true;
-					break;
-				case "<=":
-					if (emoCount <= compareCount)
-						return true;
-					break;
-				}
-				#endregion
-			} else if (conditionStr [0] == "Plot") {
-				//if (sc_God.StoryPoint.Contains (conditionStr [1]))
-				if (sc_God.ContainsSP (conditionStr [1]))
-					return true;
-			}
-
-		} else if (conditionStr.Length == 1) {
-			//Else
-			return true;
-		} else {
-			scGod.DebugTextPrint ("分歧點的條件輸入錯誤! 你輸入的是: " + _condition);
-			return false;
-		}
-		return false;
-	}
-
-	int GetEmoCountByArray(string emo, string[] _names){
-		int count = 0;
-		foreach (string _name in _names)
-			count += scGod.GetNpcDialog (_name).mySheet.GetEmoCount (emo);
-		return count;
-	}
-
-	#endregion
-
-
 	#region 其他
 
 	public void StopSheet(){
 		StopAllCoroutines ();
-		clickNextDialogue = false;
-		textRun2End = false;
-		SetNowDialog (mySheet.dialogOrder[0]);
 		DialogObj.SetActive (false);
 		tr_DialogBox.gameObject.SetActive (false);
 		scGod.scOpt.CloseQuestion ();
-	}
-
-	public bool DialFinished(string targetKey){
-		return finishedDialKey == targetKey;
-	}
-
-	void SetNowDialog(string _next){
-		if (_next == "") {
-			if (mySheet.nowDialog == mySheet.dialogOrder[mySheet.dialogOrder.Count-1]) {
-				mySheet.nowDialog = "END";
-			}else {
-				int _index = 0;
-				while (mySheet.nowDialog != mySheet.dialogOrder [_index])
-					_index++;
-				mySheet.nowDialog = mySheet.dialogOrder [_index + 1];
-			}
-
-		} else{
-			mySheet.nowDialog = _next;
-		}
 	}
 
 	public void FaceTalker(Transform target){

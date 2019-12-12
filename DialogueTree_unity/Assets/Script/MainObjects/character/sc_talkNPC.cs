@@ -20,6 +20,7 @@ public class sc_talkNPC : sc_character {
 
 	#region 其他等待函式
 	//等玩家靠近
+	/*
 	protected IEnumerator CheckPlayer(string dialKey, float checkDistance){
 		if (checkDistance < 0f)
 			checkDistance = 2.2f;
@@ -31,7 +32,7 @@ public class sc_talkNPC : sc_character {
 			scDialog.RunSheet ();
 		else
 			scDialog.StartSheetAt (dialKey);
-	}
+	}*/
 	//面對目標
 	public IEnumerator FaceTarget(Transform target){
 		int faceNum = transform.position.x < target.position.x ? 1 : -1;
@@ -103,12 +104,13 @@ public class sc_talkNPC : sc_character {
 				else
 					scDialog.isRightBox = false;
 				break;
+				/*
 			case "CheckPlayer":
 				if(funcVars.Length == 3)
 					yield return StartCoroutine (CheckPlayer (funcVars [1], float.Parse (funcVars [2])));
 				else
 					yield return StartCoroutine (CheckPlayer ("", float.Parse (funcVars [1])));
-				break;
+				break;*/
 			case "Wait":
 				yield return new WaitForSeconds (float.Parse (funcVars [1]));
 				break;
@@ -148,12 +150,13 @@ public class sc_talkNPC : sc_character {
 				}
 					
 				break;
+				/*
 			case "Talk":
 				if (funcVars.Length == 1)
 					scDialog.RunSheet ();
 				else
 					scDialog.StartSheetAt (funcVars[1]);
-				break;
+				break;*/
 			case "Anim":
 				SetAnim (funcVars [1]);
 				break;
