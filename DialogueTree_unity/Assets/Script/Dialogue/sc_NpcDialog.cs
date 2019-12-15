@@ -28,8 +28,6 @@ public class sc_NpcDialog : MonoBehaviour {
 	Camera cam;
 	Color boxColor;
 
-	//string nowDialKey = "", finishedDialKey = "";
-	int intimacy = 0;
 	[System.NonSerialized]
 	public bool isRightBox = true;
 
@@ -109,7 +107,7 @@ public class sc_NpcDialog : MonoBehaviour {
 			if(keyStr[0] != myName){
 				keyStr = nextnextKey.Split (splitter);	//檢查下下一句是否是自己講的，是則啟用REST狀態，否則關閉對話框
 				if(keyStr[0] == myName)
-					StartCoroutine(IE_TalkDialog(new Dialog("MM0/16/0/REST", "..."), false));
+					StartCoroutine(IE_TalkDialog(new Dialog ("idle", 12, "X", ""), false));
 				else
 					StartCoroutine (IE_AnimOpenDialog (animType.End, 0f, 0f, null));
 			}
@@ -122,8 +120,7 @@ public class sc_NpcDialog : MonoBehaviour {
 	#region 顯示對話
 	IEnumerator IE_TalkDialog(Dialog _dial, bool isFirst){
 		myDialog.text = "";
-		intimacy += _dial.intimacy;
-		if (_dial.animKey != "MM0")
+		if (_dial.animKey != "X")
 			scTalk.SetTalkAnim (_dial.animKey);
 		DoCommand (_dial.command);
 		yield return StartCoroutine (TextEffect (_dial, isFirst));
@@ -355,7 +352,7 @@ public class sc_NpcDialog : MonoBehaviour {
 					isRightBox = false;
 				break;
 			default:
-				sc_God.SetStoryPoint(funcStr[0], true);
+				sc_God.SetPlotFlag(funcStr[0], true);
 				break;
 			}
 		}

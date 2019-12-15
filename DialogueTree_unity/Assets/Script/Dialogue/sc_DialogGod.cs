@@ -97,14 +97,15 @@ public class sc_DialogGod : MonoBehaviour {
 						textLine = textUnit [i].Split (unitSplitChar, System.StringSplitOptions.RemoveEmptyEntries);
 						if (textLine.Length == 0 || textLine[0] == "//")
 							continue;
-						list_dialog.Add (new Dialog (textLine [0], textLine [1]));
+						
+						list_dialog.Add (String2Dialog (textLine [0], textLine [1]));
 					}
 					dc_dialogues.Add (dialogueKey, new DialogueSet (list_dialog, nextKey));
 					break;
 				case "Question":
 					string questionKey = textLine [1];
 					textLine = textUnit [1].Split (unitSplitChar, System.StringSplitOptions.RemoveEmptyEntries);
-					Dialog questionDial = new Dialog (textLine [0], textLine [1]);
+					Dialog questionDial = String2Dialog (textLine [0], textLine [1]);
 					List<Option> list_option = new List<Option> ();
 					for (int i = 2; i < textUnit.Length; i++) {
 						textLine = textUnit [i].Split (unitSplitChar, System.StringSplitOptions.RemoveEmptyEntries);
@@ -131,6 +132,14 @@ public class sc_DialogGod : MonoBehaviour {
 
 		}
   	}
+	Dialog String2Dialog(string _attribute, string _text){
+		string[] str = _attribute.Split (new char[]{ '/' });
+		string animKey = str [0];
+		int size = int.Parse (str [1]);
+		string command = str [2];
+		return new Dialog (animKey, size, command, _text);
+	}
+
 	#endregion
 
 	#region 開啟對話
@@ -293,17 +302,13 @@ public class Dialog{
 	public string text;
 	public string animKey = "";
 	public int size;
-	public int intimacy;
 	public string command = "";
 
-	public Dialog(string _attributes, string _text){
-		string[] str = _attributes.Split (new char[]{ '/' });
-		text = _text;
-		animKey = str [0];
-		size = int.Parse (str [1]);
-		intimacy = int.Parse (str [2]);
-		command = str [3];
-
+	public Dialog(string _anim, int _size, string _command, string _txt){
+		animKey = _anim;
+		size = _size;
+		command = _command;
+		text = _txt;
 	}
 }
 

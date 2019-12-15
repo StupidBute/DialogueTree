@@ -5,13 +5,13 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
-public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
+public class sc_level0God : sc_God, i_PlotFlag, i_AreaListener {
 
 	[SerializeField]
 	sc_talkNPC Kai, Lee;
 
 	void Start(){
-		StoryPoint.Clear ();
+		PlotFlags.Clear ();
 		sc_God.RegisterListener (this);
 		sc_Area.RegisterListener (this);
 		StartCoroutine (WaitTalk ());
@@ -28,14 +28,14 @@ public class sc_level0God : sc_God, i_StoryPoint, i_AreaListener {
 		}
 	}
 
-	public void PointAdd(string _key){
+	public void FlagAdd(string _key){
 		switch (_key) {
 		default:
 			break;
 		}
 	}
 
-	public void PointRemove(string _key){
+	public void FlagRemove(string _key){
 		switch (_key) {
 		default:
 			break;

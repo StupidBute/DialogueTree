@@ -176,7 +176,7 @@ public class sc_talkNPC : sc_character {
 				scPlayer.ActiveControl (int.Parse (funcVars [1]), bool.Parse (funcVars [2]));
 				break;
 			case "Plot":
-				sc_God.SetStoryPoint (funcVars [1], true);
+				sc_God.SetPlotFlag (funcVars [1], true);
 				break;
 			case "PlayerEle":
 				scPlayer.DoInteractable ();

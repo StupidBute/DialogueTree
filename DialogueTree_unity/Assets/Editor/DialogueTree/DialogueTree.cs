@@ -4,9 +4,9 @@ using UnityEngine;
 using UnityEditor;
 
 public class DialogueTree : EditorWindow {
-	GUIStyle nameStyle;
+	
 	Texture2D tex_bg, tex_left, tex_add;
-
+	GUIStyle style_button;
 	public enum WindowState{normal, drag, popup, link, scroll};
 	public WindowState nowState = WindowState.normal;
 
@@ -30,13 +30,16 @@ public class DialogueTree : EditorWindow {
 	}
 
 	void OnEnable(){
-		tex_bg = Resources.Load<Texture2D> ("GUISkin/Grid4");
+		tex_bg = Resources.Load<Texture2D> ("GUISkin/Grid");
 		lst_chars.Add (new Character (this));
 		coordinate = Vector2.zero;
 		CreateNode (Vector2.zero, 0);
 		colorWindow = new ColorWindow ();
 		leftPanel = new LeftPanel (this);
 		rightPanel = new RightPanel (this);
+
+		GUISkin mySkin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
+		style_button = mySkin.GetStyle ("button");
 	}
 
 	void OnGUI(){
@@ -48,9 +51,7 @@ public class DialogueTree : EditorWindow {
 
 		DrawPanels ();
 
-		if (GUI.changed)
-			Repaint ();
-		
+		Repaint ();
 	}
 
 #region MainFunctions
@@ -84,8 +85,16 @@ public class DialogueTree : EditorWindow {
 	void DrawPanels(){
 		leftPanel.DrawSelf ();
 		rightPanel.DrawSelf (position.size);
+		BottomPanel ();
 		if(nowState == WindowState.popup)
 			colorWindow.DrawSelf ();
+	}
+
+	void BottomPanel(){
+		if (GUI.Button (new Rect (5, position.height - 30, 70, 25), "開啟", style_button))
+			OpenFile ();
+		if (GUI.Button (new Rect (80, position.height - 30, 70, 25), "儲存", style_button))
+			SaveData ();
 	}
 
 	void ProcessEvent(Event e){
@@ -116,10 +125,9 @@ public class DialogueTree : EditorWindow {
 			break;
 		case WindowState.drag:
 			if (e.type == EventType.MouseDrag) {
-				if (SelectNode == null) {
+				if (SelectNode == null)
 					coordinate += e.delta;
-					GUI.changed = true;
-				} else
+				else
 					SelectNode.FollowMouse (e.delta);
 			}else if (e.type == EventType.MouseUp)
 				nowState = WindowState.normal;
@@ -131,7 +139,6 @@ public class DialogueTree : EditorWindow {
 		case WindowState.link:
 			Link (SelectNode.canvasRect.center, mousePos);
 			CanvasAutoMove (mousePos);
-			GUI.changed = true;
 			if (e.type == EventType.MouseDown && e.button == 0) {
 				Node originNode = SelectNode;
 				if (ClickNode (mousePos))
@@ -167,11 +174,28 @@ public class DialogueTree : EditorWindow {
 
 	void NodeDropdown(){
 		GenericMenu menu = new GenericMenu ();
-		menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
-		if (SelectNode.GetType () != typeof(StartNode))
-			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
-		else
+		switch (SelectNode.GetType ().ToString ()) {
+		case "StartNode":
+			menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
 			menu.AddDisabledItem (new GUIContent ("Delete"));
+			break;
+		case "DialogueNode":
+			menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
+			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
+			break;
+		case "QuestionNode":
+			menu.AddDisabledItem (new GUIContent ("Make Connection"));
+			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
+			break;
+		case "DivergeNode":
+			menu.AddDisabledItem (new GUIContent ("Make Connection"));
+			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
+			break;
+		case "SubNode":
+			menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
+			menu.AddDisabledItem (new GUIContent ("Delete"));
+			break;
+		}
 		menu.ShowAsContext ();
 	}
 
@@ -212,7 +236,6 @@ public class DialogueTree : EditorWindow {
 				return true;
 			}
 		}
-
 		//clicked nothing
 		ResetSelect ();
 		return false;
@@ -225,6 +248,19 @@ public class DialogueTree : EditorWindow {
 				return true;
 		}
 		return false;
+	}
+#endregion
+
+#region file
+	void OpenFile(){
+		string path = EditorUtility.OpenFilePanel ("開啟劇情檔案", "", "asset");
+
+	}
+
+	void SaveData(){
+		string path = EditorUtility.SaveFilePanel ("儲存劇情檔案", "", "new story", "asset");
+		scriptable_story story;
+		//AssetDatabase.CreateAsset (story, path);
 	}
 #endregion
 
@@ -252,7 +288,6 @@ public class DialogueTree : EditorWindow {
 		_n.DeleteAllConnect ();
 		lst_Node.Remove (_n);
 		ResetSelect ();
-		GUI.changed = true;
 	}
 
 	public void Popup(Vector2 mousePos, Character _char){
@@ -263,7 +298,6 @@ public class DialogueTree : EditorWindow {
 	public void PopupEvent(Vector2 mousePos){
 		if (!colorWindow.HitTest (mousePos)) {
 			nowState = WindowState.normal;
-			GUI.changed = true;
 		}
 	}
 #endregion

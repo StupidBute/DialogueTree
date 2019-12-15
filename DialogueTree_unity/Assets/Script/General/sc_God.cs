@@ -5,9 +5,9 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using DG.Tweening;
 
-public interface i_StoryPoint{
-	void PointAdd (string _key);
-	void PointRemove (string _key);
+public interface i_PlotFlag{
+	void FlagAdd (string _key);
+	void FlagRemove (string _key);
 }
 
 public class sc_God : MonoBehaviour {
@@ -39,8 +39,8 @@ public class sc_God : MonoBehaviour {
 	};
 	static public State StoryState;
 	static public bool fastDial = false;
-	static protected List<i_StoryPoint> SP_Listener = new List<i_StoryPoint> ();
-	static protected List<string> StoryPoint = new List<string> ();
+	static protected List<i_PlotFlag> SP_Listener = new List<i_PlotFlag> ();
+	static protected List<string> PlotFlags = new List<string> ();
 
 	void Awake () {
 		dialGod = GetComponent<sc_DialogGod>();
@@ -59,7 +59,7 @@ public class sc_God : MonoBehaviour {
 		}
 		MainCam = new CamInfo (cam, scCam, camTR, camAnim);
 		ChangeScene (true, 2f, 0);
-		StoryPoint.Clear ();
+		PlotFlags.Clear ();
 		SP_Listener.Clear ();
 		StoryState = State.開始;
 	}
@@ -80,26 +80,26 @@ public class sc_God : MonoBehaviour {
 	}
 
 
-	static public void RegisterListener(i_StoryPoint SPL){
+	static public void RegisterListener(i_PlotFlag SPL){
 		SP_Listener.Add (SPL);
 	}
 
-	static public void SetStoryPoint(string _key, bool _isAdd){
+	static public void SetPlotFlag(string _key, bool _isAdd){
 		if (_isAdd) {
-			if (!StoryPoint.Contains (_key))
-				StoryPoint.Add (_key);
-			foreach (i_StoryPoint SPL in SP_Listener)
-				SPL.PointAdd (_key);
+			if (!PlotFlags.Contains (_key))
+				PlotFlags.Add (_key);
+			foreach (i_PlotFlag SPL in SP_Listener)
+				SPL.FlagAdd (_key);
 		} else {
-			if (StoryPoint.Contains (_key))
-				StoryPoint.Remove (_key);
-			foreach (i_StoryPoint SPL in SP_Listener)
-				SPL.PointRemove (_key);
+			if (PlotFlags.Contains (_key))
+				PlotFlags.Remove (_key);
+			foreach (i_PlotFlag SPL in SP_Listener)
+				SPL.FlagRemove (_key);
 		}
 	}
 
 	static public bool ContainsSP(string _key){
-		return StoryPoint.Contains (_key);
+		return PlotFlags.Contains (_key);
 	}
 
 	protected void ChangeScene(bool _fadeInScene, float _fadeTime, float _changeTime){
@@ -142,7 +142,7 @@ public class sc_God : MonoBehaviour {
 
 	protected IEnumerator IE_WaitPlot(string _key){
 		WaitForSeconds waitTime = new WaitForSeconds (0.1f);
-		while (!StoryPoint.Contains (_key))
+		while (!PlotFlags.Contains (_key))
 			yield return waitTime;
 		yield break;
 	}
@@ -152,7 +152,7 @@ public class sc_God : MonoBehaviour {
 		do {
 			yield return waitTime;
 			foreach (string _key in _keys) {
-				if (StoryPoint.Contains (_key)) {
+				if (PlotFlags.Contains (_key)) {
 					_condition = true;
 					break;
 				}
