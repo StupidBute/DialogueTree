@@ -16,7 +16,7 @@ public class DialogueTree : EditorWindow {
 	ColorWindow colorWindow;
 
 	public List<Character> lst_chars = new List<Character> ();
-	List<Node> lst_Node = new List<Node> ();
+	public List<Node> lst_Node = new List<Node> ();
 	public Node SelectNode = null;
 	Vector2 coordinate;
 
@@ -202,7 +202,7 @@ public class DialogueTree : EditorWindow {
 	void CreateNode(Vector2 mousePos, int type){
 		Node n = null;
 		if (lst_Node.Count == 0)
-			n = new StartNode (new Vector2 (120, 150));
+			n = new StartNode (this, new Vector2 (120, 150));
 		else {
 			switch (type) {
 			case 0:
@@ -212,7 +212,7 @@ public class DialogueTree : EditorWindow {
 				n = new QuestionNode (this, mousePos - coordinate);
 				break;
 			case 2:
-				n = new DivergeNode (mousePos - coordinate);
+				n = new DivergeNode (this, mousePos - coordinate);
 				break;
 			}
 		}

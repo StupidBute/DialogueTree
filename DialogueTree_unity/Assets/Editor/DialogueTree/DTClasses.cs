@@ -17,8 +17,45 @@ public class MyFunctions{
 		_tex.Apply ();
 	}
 
-	public static T Cast<T>(object o){
-		return (T)o;
+	public static string ClampString(string target, string value){
+		char[] splitter = new char[]{ ' ' };
+		return (target.Split (splitter, System.StringSplitOptions.RemoveEmptyEntries).Length == 0) ? value : target;
+	}
+
+	public static string SetName(string _name, Node target, List<Node> nodeList){
+		foreach(Node n in nodeList) {
+			if (target != null && target == n)
+				continue;
+			if (_name == n.nodeName) {
+				string[] sepName = _name.Split (new char[]{ ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+				int number = 0;
+				if (int.TryParse (sepName [sepName.Length - 1], out number)) {
+					string result = "";
+					for (int i = 0; i < sepName.Length - 1; i++)
+						result += sepName [i] + " ";
+					return SetName (result + (number + 1).ToString (), target, nodeList);
+				} else
+					return SetName (_name + " 1", target, nodeList);
+			}
+		}
+		return _name;
+	}
+
+	public static string SetName(string _name, Character target, List<Character> charList){
+		foreach(Character c in charList) {
+			if (_name == c.name && c != target) {
+				string[] sepName = _name.Split (new char[]{ ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+				int number = 0;
+				if (int.TryParse (sepName [sepName.Length - 1], out number)) {
+					string result = "";
+					for (int i = 0; i < sepName.Length - 1; i++)
+						result += sepName [i] + " ";
+					return SetName (result + (number + 1).ToString (), target, charList);
+				} else
+					return SetName (_name + " 1", target, charList);
+			}
+		}
+		return _name;
 	}
 }
 
@@ -26,9 +63,9 @@ public class MyFunctions{
 
 public class Node {
 	const float gridSize = 20;
-	DialogueTree DTGod;
 	public Rect rect;
 	public Rect canvasRect;
+	protected DialogueTree DTGod;
 	protected GUISkin mySkin;
 	protected GUIStyle style_name;
 	protected List<NodeLink> NextLink = new List<NodeLink> ();
@@ -40,10 +77,12 @@ public class Node {
 	Vector2 dragPos;
 	bool isSelected = false;
 
-	public string nodeName = "Node Name";
+	public string nodeName = "新節點";
+	protected string defaultName = "新節點";
 
-	public Node(Vector2 _pos){
+	public Node(DialogueTree _dt, Vector2 _pos){
 		SetRects (_pos);
+		DTGod = _dt;
 		tex_selected = Resources.Load<Texture2D> ("GUISkin/Nodes/SelectedOutline");
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DialogueNode");
 		mySkin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
@@ -130,29 +169,33 @@ public class Node {
 	protected void SnapGrid(Vector2 _pos){
 		rect = new Rect (MyFunctions.SnapPos (size, _pos, gridSize), size);
 	}
+
+	public void SetName(string _name){
+		nodeName = MyFunctions.SetName (MyFunctions.ClampString (_name, defaultName), this, DTGod.lst_Node);
+	}
 #endregion
 }
 
 public class StartNode : Node{
-	public StartNode(Vector2 _pos):base(_pos){
+	public StartNode(DialogueTree _dt, Vector2 _pos):base(_dt, _pos){
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/NewStart");
 		size = new Vector2 (120, 46);
 		SetRects (_pos);
 		NameRect = new Rect (13, 23, 101, 20);
-		nodeName = "新劇情對話";
+		defaultName = "新劇情對話";
+		SetName (defaultName);
 	}
 }
 
 public class DialogueNode : Node{
 	public Character myCharacter;
 	public List<Dialog> lst_dial = new List<Dialog> ();
-	DialogueTree DTGod;
-	Rect rect_tag = new Rect (3, 3, 95, 24);
+	Rect rect_tag = new Rect (3, 3, 94, 22);
 	Rect rect_name = new Rect (3, 3, 70, 24);
 
-	public DialogueNode(DialogueTree _dt, Vector2 _pos):base(_pos){
-		nodeName = "新對話集";
-		DTGod = _dt;
+	public DialogueNode(DialogueTree _dt, Vector2 _pos):base(_dt, _pos){
+		defaultName = "新對話集";
+		SetName (defaultName);
 		myCharacter = DTGod.lst_chars [0];
 		lst_dial.Add (new Dialog ("idle", 12, "X", ""));
 	}
@@ -171,18 +214,17 @@ public class QuestionNode : Node{
 	public Character myCharacter;
 	public Dialog questionDial = new Dialog ("idle", 12, "X", "");
 	public List<SubNode> options = new List<SubNode> ();
-	DialogueTree DTGod;
-	Rect rect_tag = new Rect (3, 3, 95, 24);
+	Rect rect_tag = new Rect (3, 3, 94, 22);
 	Rect rect_name = new Rect (3, 3, 70, 24);
 
 
-	public QuestionNode(DialogueTree _dt, Vector2 _pos):base(_pos){
+	public QuestionNode(DialogueTree _dt, Vector2 _pos):base(_dt, _pos){
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/QuestionNode");
-		nodeName = "新問答集";
-		DTGod = _dt;
+		defaultName = "新問答集";
+		SetName (defaultName);
 		myCharacter = DTGod.lst_chars [0];
-		options.Add (new SubNode (rect.center + new Vector2 (-85, 65), new Option ("選項內容", "END"), this));
-		options.Add (new SubNode (rect.center + new Vector2 (10, 65), new Option ("選項內容", "END"), this));
+		options.Add (new SubNode (_dt, rect.center + new Vector2 (-85, 65), new Option ("選項內容", "END"), this));
+		options.Add (new SubNode (_dt, rect.center + new Vector2 (10, 65), new Option ("選項內容", "END"), this));
 	}
 
 	override public void DrawSelf(Vector2 coordinate){
@@ -220,15 +262,16 @@ public class QuestionNode : Node{
 public class DivergeNode : Node{
 	public List<SubNode> diverges = new List<SubNode> ();
 
-	public DivergeNode(Vector2 _pos):base(_pos){
+	public DivergeNode(DialogueTree _dt, Vector2 _pos):base(_dt, _pos){
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DivergeNode");
 		size = new Vector2 (110, 50);
 		SetRects (_pos);
 		NameRect = new Rect (13, 28, 89, 20);
-		nodeName = "新分歧點";
+		defaultName = "新分歧點";
+		SetName (defaultName);
 		List<string> defaultCondition = new List<string> ();
 		defaultCondition.Add ("Else");
-		diverges.Add (new SubNode (rect.center + new Vector2 (-35, 65), new DivergeUnit (defaultCondition, "END"), this));
+		diverges.Add (new SubNode (_dt, rect.center + new Vector2 (-35, 65), new DivergeUnit (defaultCondition, "END"), this));
 	}
 
 	override public void DrawSelf(Vector2 coordinate){
@@ -253,6 +296,43 @@ public class DivergeNode : Node{
 		base.DrawMyLink ();
 		foreach (SubNode sn in diverges)
 			sn.DrawMyLink ();
+	}
+}
+
+public class SubNode : Node{
+	public Option myOption = null;
+	public DivergeUnit myDiverge = null;
+
+	public SubNode(DialogueTree _dt, Vector2 _pos, Option opt, Node prevNode):base(_dt, _pos){
+		myOption = opt;
+		prevNode.SetConnect (this);
+		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/OptionUnit");
+		tex_selected = Resources.Load<Texture2D> ("GUISkin/blank");
+		size = new Vector2 (70, 44);
+		SetRects (_pos);
+		NameRect = new Rect (7, 7, 62, 36);
+		nodeName = myOption.text;
+		style_name = mySkin.GetStyle ("optionunit");
+	}
+
+	public SubNode(DialogueTree _dt, Vector2 _pos, DivergeUnit diver, Node prevNode):base(_dt, _pos){
+		myDiverge = diver;
+		prevNode.SetConnect (this);
+		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DivergeUnit");
+		tex_selected = Resources.Load<Texture2D> ("GUISkin/blank");
+		size = new Vector2 (70, 44);
+		SetRects (_pos);
+		NameRect = new Rect (7, 7, 62, 36);
+		nodeName = myDiverge.conditions [0];
+		style_name = mySkin.GetStyle ("divergeunit");
+	}
+
+	override public void DrawSelf(Vector2 coordinate){
+		if (myOption != null)
+			nodeName = myOption.text;
+		else
+			nodeName = myDiverge.conditions [0];
+		base.DrawSelf (coordinate);
 	}
 }
 
@@ -370,44 +450,6 @@ public class NodeLink{
 		nodeB.DeleteLink (true, this);
 	}
 }
-
-public class SubNode : Node{
-	public Option myOption = null;
-	public DivergeUnit myDiverge = null;
-
-	public SubNode(Vector2 _pos, Option opt, Node prevNode):base(_pos){
-		myOption = opt;
-		prevNode.SetConnect (this);
-		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/OptionUnit");
-		tex_selected = Resources.Load<Texture2D> ("GUISkin/blank");
-		size = new Vector2 (70, 44);
-		SetRects (_pos);
-		NameRect = new Rect (7, 7, 62, 36);
-		nodeName = myOption.text;
-		style_name = mySkin.GetStyle ("optionunit");
-	}
-
-	public SubNode(Vector2 _pos, DivergeUnit diver, Node prevNode):base(_pos){
-		myDiverge = diver;
-		prevNode.SetConnect (this);
-		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DivergeUnit");
-		tex_selected = Resources.Load<Texture2D> ("GUISkin/blank");
-		size = new Vector2 (70, 44);
-		SetRects (_pos);
-		NameRect = new Rect (7, 7, 62, 36);
-		nodeName = myDiverge.conditions [0];
-		style_name = mySkin.GetStyle ("divergeunit");
-	}
-
-	override public void DrawSelf(Vector2 coordinate){
-		if (myOption != null)
-			nodeName = myOption.text;
-		else
-			nodeName = myDiverge.conditions [0];
-		base.DrawSelf (coordinate);
-	}
-}
-
 #endregion
 
 #region 左面板相關
@@ -526,7 +568,8 @@ public class Character{
 		}
 		MyFunctions.SetTexture (ref tex_choose, new Color (.35f, .35f, .35f, .9f));
 		DTGod = _dt;
-		name = SetName (DTGod.lst_chars.Count == 0 ? "N/A" : "新角色");
+		name = MyFunctions.SetName (DTGod.lst_chars.Count == 0 ? "N/A" : "新角色", this, DTGod.lst_chars);
+		colorIndex = DTGod.lst_chars.Count == 0 ? 7 : 0;
 	}
 
 	public bool HitTest(Event e){
@@ -587,29 +630,14 @@ public class Character{
 	}
 
 	void EditName(bool isEditing){
+		if (editName == isEditing)
+			return;
 		EditorGUI.FocusTextInControl ("");
 		editName = isEditing;
 		if (!isEditing) {
-			name = SetName (name);
+			name = MyFunctions.SetName (MyFunctions.ClampString (name, "新角色"), this, DTGod.lst_chars);
 			DTGod.rightPanel.SetNameArray ();
 		}
-	}
-
-	string SetName(string _name){
-		foreach (Character c in DTGod.lst_chars) {
-			if (c != this && c.name == _name) {
-				string[] sepName = _name.Split (new char[]{ ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
-				int number;
-				if (int.TryParse (sepName [sepName.Length - 1], out number)) {
-					string result = "";
-					for (int i = 0; i < sepName.Length - 1; i++)
-						result += sepName [i] + " ";
-					return SetName (result + (number + 1).ToString ());
-				}else
-					return SetName (_name + " 1");
-			}
-		}
-		return _name;
 	}
 }
 
@@ -652,7 +680,7 @@ public class ColorWindow{
 #region 右面版相關
 public class RightPanel{
 	DialogueTree DTGod;
-	GUIStyle style_subtitle, style_label, style_ttf, style_tf, style_ta, style_dropdown, style_button, style_edit;
+	GUIStyle style_subtitle, style_label, style_ttf, style_tf, style_dt, style_ta, style_dropdown, style_button, style_edit;
 	Texture2D tex_box, tex_bg, tex_scroller, tex_outline, tex_extent, tex_unextent, tex_edit, tex_remove, tex_noRemove;
 	Node prevSelect = null;
 	Rect boxRect = new Rect (0, 0, 261, 70), 
@@ -682,6 +710,7 @@ public class RightPanel{
 		style_label = skin.GetStyle ("label");
 		style_ttf = skin.GetStyle ("titletextfield");
 		style_tf = skin.GetStyle ("textfield");
+		style_dt = skin.GetStyle ("disabledtext");
 		style_ta = skin.GetStyle ("textarea");
 		style_dropdown = skin.GetStyle ("dropdown");
 		style_button = skin.GetStyle ("button");
@@ -816,14 +845,14 @@ public class RightPanel{
 	void DrawInfo(StartNode n){
 		GUI.DrawTexture (new Rect (5, 4, 240, 49), tex_outline);
 		GUI.Label (new Rect (15, 15, 30, 25), "劇情", style_subtitle);
-		DTGod.SelectNode.nodeName = EditorGUI.TextField (new Rect (50, 15, 185, 24), DTGod.SelectNode.nodeName, style_ttf);
+		n.SetName (EditorGUI.TextField (new Rect (50, 15, 185, 24), n.nodeName, style_ttf));
 		contentRect.height = 57;
 	}
 
 	void DrawInfo(DialogueNode n){
 		GUI.DrawTexture (new Rect (5, 4, 240, 84), tex_outline);
 		GUI.Label (new Rect (15, 15, 30, 25), "對話", style_subtitle);
-		DTGod.SelectNode.nodeName = EditorGUI.TextField (new Rect (50, 15, 185, 24), DTGod.SelectNode.nodeName, style_ttf);
+		n.SetName (EditorGUI.TextField (new Rect (50, 15, 185, 24), n.nodeName, style_ttf));
 		int index = DTGod.lst_chars.FindIndex (d => d == n.myCharacter);
 		index = index < 0 ? 0 : index;
 		GUI.Label (new Rect (15, 48, 30, 25), "角色", style_subtitle);
@@ -831,7 +860,7 @@ public class RightPanel{
 		contentRect.height = 91;
 
 		if (extent) {
-			contentRect.height += 40;
+			contentRect.height += 10;
 			for (int i = 0; i < n.lst_dial.Count; i++) {
 				if (GUI.Button (new Rect (contentRect.width - 15, contentRect.height + 5, 22, 22), tex_edit, style_edit))
 					EditDialNode (n, i);
@@ -846,7 +875,7 @@ public class RightPanel{
 	void DrawInfo(QuestionNode n){
 		GUI.DrawTexture (new Rect (5, 4, 240, 84), tex_outline);
 		GUI.Label (new Rect (15, 15, 30, 25), "問答", style_subtitle);
-		DTGod.SelectNode.nodeName = EditorGUI.TextField (new Rect (50, 15, 185, 24), DTGod.SelectNode.nodeName, style_ttf);
+		n.SetName (EditorGUI.TextField (new Rect (50, 15, 185, 24), n.nodeName, style_ttf));
 		int index = DTGod.lst_chars.FindIndex (d => d == n.myCharacter);
 		index = index < 0 ? 0 : index;
 		GUI.Label (new Rect (15, 48, 30, 25), "角色", style_subtitle);
@@ -854,7 +883,7 @@ public class RightPanel{
 		contentRect.height = 91;
 
 		if (extent) {
-			contentRect.height += 40;
+			contentRect.height += 10;
 			DrawDialogue (n.questionDial, "問題");
 			float height = contentRect.height;
 			for (int i = 0; i < n.options.Count; i++)
@@ -862,7 +891,7 @@ public class RightPanel{
 			contentRect.height += 20;
 			if (n.options.Count < 4) {
 				if (GUI.Button (new Rect (10, contentRect.height, 230, 40), "新增選項", style_button))
-					n.options.Add (new SubNode (n.options [n.options.Count - 1].rect.position + new Vector2 (100, 0), new Option ("", ""), n));
+					n.options.Add (new SubNode (DTGod, n.options [n.options.Count - 1].rect.position + new Vector2 (100, 0), new Option ("", ""), n));
 			} else
 				GUI.Label (new Rect (10, contentRect.height, 230, 40), "選項數已達上限", style_label);
 			
@@ -873,14 +902,14 @@ public class RightPanel{
 	void DrawInfo(DivergeNode n){
 		GUI.DrawTexture (new Rect (5, 4, 240, 49), tex_outline);
 		GUI.Label (new Rect (15, 15, 30, 25), "分歧", style_subtitle);
-		DTGod.SelectNode.nodeName = EditorGUI.TextField (new Rect (50, 15, 185, 24), DTGod.SelectNode.nodeName, style_ttf);
+		n.SetName (EditorGUI.TextField (new Rect (50, 15, 185, 24), n.nodeName, style_ttf));
 		contentRect.height = 57;
 	}
 
 	void DrawInfo(SubNode n){
 		GUI.DrawTexture (new Rect (5, 4, 240, 49), tex_outline);
 		GUI.Label (new Rect (15, 15, 30, 25), n.myOption != null ? "選項" : "分歧", style_subtitle);
-		GUI.Label (new Rect (50, 15, 185, 24), DTGod.SelectNode.nodeName, style_ttf);
+		GUI.Label (new Rect (50, 15, 185, 24), n.nodeName, style_dt);
 		contentRect.height = 57;
 	}
 	#endregion
