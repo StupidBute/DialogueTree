@@ -61,9 +61,11 @@ public class MyFunctions{
 
 #region Nodes
 
+//[System.Serializable]
 public class Node {
 	const float gridSize = 20;
 	public Rect rect;
+	//[System.NonSerialized]
 	public Rect canvasRect;
 	protected DialogueTree DTGod;
 	protected GUISkin mySkin;
@@ -171,7 +173,7 @@ public class Node {
 	}
 
 	public void SetName(string _name){
-		nodeName = MyFunctions.SetName (MyFunctions.ClampString (_name, defaultName), this, DTGod.lst_Node);
+		nodeName = MyFunctions.SetName (MyFunctions.ClampString (_name, defaultName), this, DTGod.story.lst_Node);
 	}
 #endregion
 }
@@ -196,7 +198,7 @@ public class DialogueNode : Node{
 	public DialogueNode(DialogueTree _dt, Vector2 _pos):base(_dt, _pos){
 		defaultName = "新對話集";
 		SetName (defaultName);
-		myCharacter = DTGod.lst_chars [0];
+		myCharacter = DTGod.story.lst_chars [0];
 		lst_dial.Add (new Dialog ("idle", 12, "X", ""));
 	}
 
@@ -220,7 +222,7 @@ public class QuestionNode : Node{
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/QuestionNode");
 		defaultName = "新問答集";
 		SetName (defaultName);
-		myCharacter = DTGod.lst_chars [0];
+		myCharacter = DTGod.story.lst_chars [0];
 		options.Add (new SubNode (_dt, rect.center + new Vector2 (-35, 65), new Option ("選項內容", "END"), this));
 	}
 
@@ -484,19 +486,19 @@ public class LeftPanel{
 	//process under mouse down event
 	public bool HitTest(Event e){
 		if (!rect_left.Contains (e.mousePosition)) {
-			foreach (Character c in DTGod.lst_chars)
+			foreach (Character c in DTGod.story.lst_chars)
 				c.Chosen (false);
 			return false;
 		}
 		
 		if (e.button == 0) {
 			if (rect_add.Contains (e.mousePosition)) {
-				DTGod.lst_chars.Add (new Character (DTGod));
+				DTGod.story.lst_chars.Add (new Character (DTGod));
 				DTGod.rightPanel.SetNameArray ();
 			} else {
 				bool hitChar = false;
-				for (int i = 1; i < DTGod.lst_chars.Count; i++) {
-					Character _c = DTGod.lst_chars [i];
+				for (int i = 1; i < DTGod.story.lst_chars.Count; i++) {
+					Character _c = DTGod.story.lst_chars [i];
 					if (_c.HitTest (e)) {
 						if (_c != selectedChar)
 							ResetSelected ();
@@ -528,39 +530,40 @@ public class LeftPanel{
 	void DeleteChar(){
 		Character c = selectedChar;
 		ResetSelected ();
-		DTGod.lst_chars.Remove (c);
+		DTGod.story.lst_chars.Remove (c);
 		DTGod.rightPanel.SetNameArray ();
 	}
 
 	public void DrawSelf(){
-		rect_left.height = 44 + 24 * DTGod.lst_chars.Count;
+		rect_left.height = 44 + 24 * DTGod.story.lst_chars.Count;
 		GUI.DrawTexture (rect_left, tex_left);
 		GUI.Label (rect_titleL, "對話角色名單", titleStyle);
 
-		for (int i = 1; i < DTGod.lst_chars.Count; i++)
-			DTGod.lst_chars [i].DrawSelf (i-1);
+		for (int i = 1; i < DTGod.story.lst_chars.Count; i++)
+			DTGod.story.lst_chars [i].DrawSelf (i-1);
 		
-		rect_add = new Rect (10, 21 + DTGod.lst_chars.Count * 24, 75, 15);
-		GUI.DrawTexture (new Rect (10, 21 + DTGod.lst_chars.Count * 24, 12, 12), tex_add);
-		GUI.Label (new Rect (28, 16 + DTGod.lst_chars.Count * 24, 65, 20), "新增角色", labelStyle);
+		rect_add = new Rect (10, 21 + DTGod.story.lst_chars.Count * 24, 75, 15);
+		GUI.DrawTexture (new Rect (10, 21 + DTGod.story.lst_chars.Count * 24, 12, 12), tex_add);
+		GUI.Label (new Rect (28, 16 + DTGod.story.lst_chars.Count * 24, 65, 20), "新增角色", labelStyle);
 	}
 }
 
 public class Character{
 	public string name;
+	public int colorIndex = 0;
+	DialogueTree DTGod;
+
 	Texture2D[] tex_charColors = new Texture2D[8];
 	Texture2D[] tex_nodeColors = new Texture2D[8];
 	Texture2D tex_choose;
 	GUIStyle nameStyle, fieldStyle, tagWStyle, tagBStyle;
+
 	Rect rect = new Rect(6, 37, 110, 20), 
 	rect_color = new Rect(8, 40, 18, 9), 
 	rect_name = new Rect(32, 40, 85, 20), 
 	rect_nameField = new Rect(29, 38, 85, 18);
 	bool chosen = false;
 	bool editName = false;
-
-	public int colorIndex = 0;
-	DialogueTree DTGod;
 
 	public Character(DialogueTree _dt){
 		GUISkin skin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
@@ -574,8 +577,8 @@ public class Character{
 		}
 		MyFunctions.SetTexture (ref tex_choose, new Color (.35f, .35f, .35f, .9f));
 		DTGod = _dt;
-		name = MyFunctions.SetName (DTGod.lst_chars.Count == 0 ? "N/A" : "新角色", this, DTGod.lst_chars);
-		colorIndex = DTGod.lst_chars.Count == 0 ? 7 : 0;
+		name = MyFunctions.SetName (DTGod.story.lst_chars.Count == 0 ? "N/A" : "新角色", this, DTGod.story.lst_chars);
+		colorIndex = DTGod.story.lst_chars.Count == 0 ? 7 : 0;
 	}
 
 	public bool HitTest(Event e){
@@ -641,7 +644,7 @@ public class Character{
 		EditorGUI.FocusTextInControl ("");
 		editName = isEditing;
 		if (!isEditing) {
-			name = MyFunctions.SetName (MyFunctions.ClampString (name, "新角色"), this, DTGod.lst_chars);
+			name = MyFunctions.SetName (MyFunctions.ClampString (name, "新角色"), this, DTGod.story.lst_chars);
 			DTGod.rightPanel.SetNameArray ();
 		}
 	}
@@ -780,11 +783,11 @@ public class RightPanel{
 
 	#region others
 	public void SetNameArray(){
-		nameArray = new string[DTGod.lst_chars.Count];
+		nameArray = new string[DTGod.story.lst_chars.Count];
 		nameArray[0] = "none";
 		int i;
-		for (i = 1; i < DTGod.lst_chars.Count; i++) {
-			nameArray [i] = DTGod.lst_chars [i].name;
+		for (i = 1; i < DTGod.story.lst_chars.Count; i++) {
+			nameArray [i] = DTGod.story.lst_chars [i].name;
 		}
 	}
 
@@ -859,10 +862,10 @@ public class RightPanel{
 		GUI.DrawTexture (new Rect (5, 4, 240, 84), tex_outline);
 		GUI.Label (new Rect (15, 15, 30, 25), "對話", style_subtitle);
 		n.SetName (EditorGUI.TextField (new Rect (50, 15, 185, 24), n.nodeName, style_ttf));
-		int index = DTGod.lst_chars.FindIndex (d => d == n.myCharacter);
+		int index = DTGod.story.lst_chars.FindIndex (d => d == n.myCharacter);
 		index = index < 0 ? 0 : index;
 		GUI.Label (new Rect (15, 48, 30, 25), "角色", style_subtitle);
-		n.myCharacter = DTGod.lst_chars [EditorGUI.Popup (new Rect (51, 47, 184, 27), index, nameArray, style_dropdown)];
+		n.myCharacter = DTGod.story.lst_chars [EditorGUI.Popup (new Rect (51, 47, 184, 27), index, nameArray, style_dropdown)];
 		contentRect.height = 91;
 
 		if (extent) {
@@ -882,10 +885,10 @@ public class RightPanel{
 		GUI.DrawTexture (new Rect (5, 4, 240, 84), tex_outline);
 		GUI.Label (new Rect (15, 15, 30, 25), "問答", style_subtitle);
 		n.SetName (EditorGUI.TextField (new Rect (50, 15, 185, 24), n.nodeName, style_ttf));
-		int index = DTGod.lst_chars.FindIndex (d => d == n.myCharacter);
+		int index = DTGod.story.lst_chars.FindIndex (d => d == n.myCharacter);
 		index = index < 0 ? 0 : index;
 		GUI.Label (new Rect (15, 48, 30, 25), "角色", style_subtitle);
-		n.myCharacter = DTGod.lst_chars [EditorGUI.Popup (new Rect (51, 47, 184, 27), index, nameArray, style_dropdown)];
+		n.myCharacter = DTGod.story.lst_chars [EditorGUI.Popup (new Rect (51, 47, 184, 27), index, nameArray, style_dropdown)];
 		contentRect.height = 91;
 
 		if (extent) {
