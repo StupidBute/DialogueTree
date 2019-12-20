@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEditor;
 
 public class DialogueTree : EditorWindow {
-	
 	Texture2D tex_bg, tex_left, tex_add;
 	GUIStyle style_button;
 	public enum WindowState{normal, drag, popup, link, scroll};
@@ -15,10 +14,14 @@ public class DialogueTree : EditorWindow {
 	public RightPanel rightPanel;
 	ColorWindow colorWindow;
 
+	//public scriptable_story story;
 	public List<Character> lst_chars = new List<Character> ();
 	public List<Node> lst_Node = new List<Node> ();
 	public Node SelectNode = null;
 	Vector2 coordinate;
+	int plotNodeCount = 1;
+
+
 
 	[MenuItem("Window/Dialogue Tree")]
 	static void Init(){
@@ -31,7 +34,7 @@ public class DialogueTree : EditorWindow {
 
 	void OnEnable(){
 		tex_bg = Resources.Load<Texture2D> ("GUISkin/Grid");
-		lst_chars.Add (new Character (this));
+		//lst_chars.Add (new Character (this));
 		coordinate = Vector2.zero;
 		CreateNode (Vector2.zero, 0);
 		colorWindow = new ColorWindow ();
@@ -40,6 +43,8 @@ public class DialogueTree : EditorWindow {
 
 		GUISkin mySkin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
 		style_button = mySkin.GetStyle ("button");
+
+		Selection.selectionChanged = LoadStoryAsset;
 	}
 
 	void OnGUI(){
@@ -91,10 +96,15 @@ public class DialogueTree : EditorWindow {
 	}
 
 	void BottomPanel(){
-		if (GUI.Button (new Rect (5, position.height - 30, 70, 25), "開啟", style_button))
+		if (GUI.Button (new Rect (5, position.height - 30, 70, 25), "開啟", style_button)) {
+			ResetSelect ();
 			OpenFile ();
-		if (GUI.Button (new Rect (80, position.height - 30, 70, 25), "儲存", style_button))
+		}
+			
+		if (GUI.Button (new Rect (80, position.height - 30, 70, 25), "儲存", style_button)) {
+			ResetSelect ();
 			SaveData ();
+		}
 	}
 
 	void ProcessEvent(Event e){
@@ -166,9 +176,11 @@ public class DialogueTree : EditorWindow {
 #region Dropdowns
 	void MainDropdown(Vector2 mousePos){
 		GenericMenu menu = new GenericMenu ();
-		menu.AddItem (new GUIContent ("Create Dialogue"), false, () => CreateNode (mousePos, 0));
-		menu.AddItem (new GUIContent ("Create Question"), false, () => CreateNode (mousePos, 1));
-		menu.AddItem (new GUIContent ("Create Diverge"), false, () => CreateNode (mousePos, 2));
+		menu.AddItem (new GUIContent ("新增劇情"), false, () => CreateNode (mousePos, 0));
+		menu.AddSeparator ("");
+		menu.AddItem (new GUIContent ("新增對話集"), false, () => CreateNode (mousePos, 1));
+		menu.AddItem (new GUIContent ("新增問答集"), false, () => CreateNode (mousePos, 2));
+		menu.AddItem (new GUIContent ("新增分歧點"), false, () => CreateNode (mousePos, 3));
 		menu.ShowAsContext ();
 	}
 
@@ -176,24 +188,27 @@ public class DialogueTree : EditorWindow {
 		GenericMenu menu = new GenericMenu ();
 		switch (SelectNode.GetType ().ToString ()) {
 		case "StartNode":
-			menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
-			menu.AddDisabledItem (new GUIContent ("Delete"));
+			menu.AddItem (new GUIContent ("建立連結"), false, () => {nowState = WindowState.link;});
+			if(plotNodeCount > 1)
+				menu.AddItem (new GUIContent ("刪除"), false, () => DeleteNode (SelectNode));
+			else
+				menu.AddDisabledItem (new GUIContent ("刪除"));
 			break;
 		case "DialogueNode":
-			menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
-			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
+			menu.AddItem (new GUIContent ("建立連結"), false, () => {nowState = WindowState.link;});
+			menu.AddItem (new GUIContent ("刪除"), false, () => DeleteNode (SelectNode));
 			break;
 		case "QuestionNode":
-			menu.AddDisabledItem (new GUIContent ("Make Connection"));
-			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
+			menu.AddDisabledItem (new GUIContent ("建立連結"));
+			menu.AddItem (new GUIContent ("刪除"), false, () => DeleteNode (SelectNode));
 			break;
 		case "DivergeNode":
-			menu.AddDisabledItem (new GUIContent ("Make Connection"));
-			menu.AddItem (new GUIContent ("Delete"), false, () => DeleteNode (SelectNode));
+			menu.AddDisabledItem (new GUIContent ("建立連結"));
+			menu.AddItem (new GUIContent ("刪除"), false, () => DeleteNode (SelectNode));
 			break;
 		case "SubNode":
-			menu.AddItem (new GUIContent ("Make Connection"), false, () => {nowState = WindowState.link;});
-			menu.AddDisabledItem (new GUIContent ("Delete"));
+			menu.AddItem (new GUIContent ("建立連結"), false, () => {nowState = WindowState.link;});
+			menu.AddDisabledItem (new GUIContent ("刪除"));
 			break;
 		}
 		menu.ShowAsContext ();
@@ -206,18 +221,30 @@ public class DialogueTree : EditorWindow {
 		else {
 			switch (type) {
 			case 0:
-				n = new DialogueNode (this, mousePos - coordinate);
+				n = new StartNode (this, mousePos - coordinate);
+				plotNodeCount++;
 				break;
 			case 1:
-				n = new QuestionNode (this, mousePos - coordinate);
+				n = new DialogueNode (this, mousePos - coordinate);
 				break;
 			case 2:
+				n = new QuestionNode (this, mousePos - coordinate);
+				break;
+			case 3:
 				n = new DivergeNode (this, mousePos - coordinate);
 				break;
 			}
 		}
 		if(n != null)
 			lst_Node.Add (n);
+	}
+
+	void DeleteNode(Node _n){
+		_n.DeleteAllConnect ();
+		if (_n.GetType () == typeof(StartNode))
+			plotNodeCount--;
+		lst_Node.Remove (_n);
+		ResetSelect ();
 	}
 #endregion
 
@@ -252,15 +279,36 @@ public class DialogueTree : EditorWindow {
 #endregion
 
 #region file
-	void OpenFile(){
-		string path = EditorUtility.OpenFilePanel ("開啟劇情檔案", "", "asset");
+	public void LoadStoryAsset(){
+		if (Selection.activeObject == null || Selection.activeObject.GetType () != typeof(scriptable_story))
+			return;
+		scriptable_story story = (scriptable_story)Selection.activeObject;
+	}
 
+	void OpenFile(){
+		/*
+		string path = EditorUtility.OpenFilePanel("開啟劇情檔案", "", "asset");
+		if (path == "") {
+			Debug.Log ("Abort Opening.");
+			return;
+		}
+		path = path.Replace (Application.dataPath, "Assets");
+		scriptable_story story = AssetDatabase.LoadAssetAtPath<scriptable_story> (path);
+		lst_chars = story.lst_chars;
+		lst_Node = story.lst_Node;*/
 	}
 
 	void SaveData(){
-		string path = EditorUtility.SaveFilePanel ("儲存劇情檔案", "", "new story", "asset");
-		scriptable_story story;
-		//AssetDatabase.CreateAsset (story, path);
+		/*
+		string path = EditorUtility.SaveFilePanelInProject ("儲存劇情檔案", "new story", "asset", "");
+		if (path == "") {
+			Debug.Log ("Abort Saving.");
+			return;
+		}
+		scriptable_story story = ScriptableObject.CreateInstance<scriptable_story> ();
+		story.lst_chars = new List<Character>(lst_chars);
+		story.lst_Node = new List<Node> (lst_Node);
+		AssetDatabase.CreateAsset (story, path);*/
 	}
 #endregion
 
@@ -282,12 +330,6 @@ public class DialogueTree : EditorWindow {
 			coordinate.y -= 4;
 		else if (mousePos.y < 50)
 			coordinate.y += 4;
-	}
-
-	void DeleteNode(Node _n){
-		_n.DeleteAllConnect ();
-		lst_Node.Remove (_n);
-		ResetSelect ();
 	}
 
 	public void Popup(Vector2 mousePos, Character _char){

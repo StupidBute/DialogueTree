@@ -21,6 +21,7 @@ public class sc_DialogGod : MonoBehaviour {
 	public Dictionary<string, DialogueSet> dc_dialogues = new Dictionary<string, DialogueSet> ();
 	public Dictionary<string, Question> dc_questions = new Dictionary<string, Question> ();
 	public Dictionary<string, List<DivergeUnit>> dc_diverges = new Dictionary<string, List<DivergeUnit>> ();
+	public scriptable_story myStory;
 	List<string> list_talkingNPC = new List<string>();
 
 
@@ -220,15 +221,17 @@ public class sc_DialogGod : MonoBehaviour {
 
 		string[] conditionStr = _condition.Split (conditionSpliter, System.StringSplitOptions.RemoveEmptyEntries);
 		if (conditionStr.Length == 2) {
+			string[] possibleCases = conditionStr [1].Split (caseSpliter, System.StringSplitOptions.RemoveEmptyEntries);
 			if (conditionStr [0] == "Plot") {
 				//Plot(劇情開關代碼)
-				if (sc_God.ContainsSP (conditionStr [1]))
-					return true;
+				foreach(string plotFlag in possibleCases){
+					if (sc_God.ContainsSP (plotFlag))
+						return true;
+				}
 			} else {
 				//角色:問題(答案)
-				string[] possibleAnswers = conditionStr [1].Split (caseSpliter, System.StringSplitOptions.RemoveEmptyEntries);
 				int playerAnswer = dc_questions [conditionStr [0]].answer;
-				foreach (string answerKey in possibleAnswers) {
+				foreach (string answerKey in possibleCases) {
 					if(answerKey == "All" && playerAnswer != -1)
 						return true;
 					else if (playerAnswer == int.Parse(answerKey))
@@ -238,9 +241,6 @@ public class sc_DialogGod : MonoBehaviour {
 		} else if (conditionStr.Length == 1) {
 			//Else
 			return true;
-		} else {
-			print ("分歧點的條件輸入錯誤! 你輸入的是: " + _condition);
-			return false;
 		}
 		return false;
 	}
