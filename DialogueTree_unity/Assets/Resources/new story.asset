@@ -11,3 +11,126 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79b55de5385f4374382fa61288862de1, type: 3}
   m_Name: new story
   m_EditorClassIdentifier: 
+  lst_charInfo:
+  - name: N/A
+    colorIndex: 7
+  - name: "\u65B0\u89D2\u8272"
+    colorIndex: 2
+  - name: "\u65B0\u89D2\u8272 1"
+    colorIndex: 0
+  - name: "\u65B0\u89D2\u8272 2"
+    colorIndex: 4
+  lst_startNodeInfo:
+  - name: "\u65B0\u5287\u60C5\u5C0D\u8A71 1"
+    myPos: {x: 717, y: 574}
+    nextKey: "\u65B0\u5206\u6B67\u9EDE"
+  - name: "\u65B0\u5287\u60C5\u5C0D\u8A71"
+    myPos: {x: 117, y: 154}
+    nextKey: "\u65B0\u5C0D\u8A71\u96C6"
+  lst_dialogueNodeInfo:
+  - name: "\u65B0\u5C0D\u8A71\u96C6"
+    myPos: {x: 107, y: 288}
+    charName: "\u65B0\u89D2\u8272"
+    myDialSet:
+      dialogs:
+      - text: 123
+        animKey: idle
+        size: 12
+        command: X
+      - text: 456
+        animKey: idle
+        size: 14
+        command: X
+      nextKey: "\u65B0\u554F\u7B54\u96C6"
+  - name: "\u65B0\u5C0D\u8A71\u96C6 1"
+    myPos: {x: -53, y: 688}
+    charName: "\u65B0\u89D2\u8272"
+    myDialSet:
+      dialogs:
+      - text: 
+        animKey: idle
+        size: 12
+        command: X
+      nextKey: END
+  - name: "\u65B0\u5C0D\u8A71\u96C6 2"
+    myPos: {x: 107, y: 748}
+    charName: "\u65B0\u89D2\u8272 1"
+    myDialSet:
+      dialogs:
+      - text: 
+        animKey: idle
+        size: 12
+        command: X
+      nextKey: END
+  - name: "\u65B0\u5C0D\u8A71\u96C6 3"
+    myPos: {x: 267, y: 808}
+    charName: "\u65B0\u89D2\u8272 2"
+    myDialSet:
+      dialogs:
+      - text: 
+        animKey: idle
+        size: 12
+        command: X
+      nextKey: END
+  lst_questionNodeInfo:
+  - name: "\u65B0\u554F\u7B54\u96C6"
+    myPos: {x: 107, y: 388}
+    charName: "\u65B0\u89D2\u8272"
+    myQuestion:
+      questionDial:
+        text: ????
+        animKey: idle
+        size: 12
+        command: X
+      options:
+      - text: "\u54C8\u56C9\u4F60\u597D\u55CE?"
+        nextKey: "\u65B0\u5C0D\u8A71\u96C6 1"
+      - text: "\u8877\u5FC3\u611F\u8B1D~"
+        nextKey: "\u65B0\u5C0D\u8A71\u96C6 2"
+      - text: "\u73CD\u91CD\u518D\u898B!"
+        nextKey: "\u65B0\u5C0D\u8A71\u96C6 3"
+      answer: -1
+    optionInfos:
+    - name: "\u9078\u98050\n\u54C8\u56C9\u4F60\u597D\u55CE?"
+      myPos: {x: -18, y: 535}
+      myOption: "\u54C8\u56C9\u4F60\u597D\u55CE?"
+      diverConditions: []
+    - name: "\u9078\u98051\n\u8877\u5FC3\u611F\u8B1D~"
+      myPos: {x: 142, y: 535}
+      myOption: "\u8877\u5FC3\u611F\u8B1D~"
+      diverConditions: []
+    - name: "\u9078\u98052\n\u73CD\u91CD\u518D\u898B!"
+      myPos: {x: 302, y: 535}
+      myOption: "\u73CD\u91CD\u518D\u898B!"
+      diverConditions: []
+  lst_divergeNodeInfo:
+  - name: "\u65B0\u5206\u6B67\u9EDE"
+    myPos: {x: 722, y: 752}
+    myDiverges:
+    - conditions:
+      - "\u65B0\u554F\u7B54\u96C6(2)"
+      - Plot(abc)
+      nextKey: "\u65B0\u5C0D\u8A71\u96C6 1"
+    - conditions:
+      - Plot(def)
+      nextKey: "\u65B0\u5C0D\u8A71\u96C6 2"
+    - conditions:
+      - Else
+      nextKey: "\u65B0\u5C0D\u8A71\u96C6 3"
+    diverInfos:
+    - name: "\u5206\u6B670\n\u65B0\u554F\u7B54\u96C6(2)"
+      myPos: {x: 522, y: 695}
+      myOption: 
+      diverConditions:
+      - "\u65B0\u554F\u7B54\u96C6(2)"
+      - Plot(abc)
+    - name: "\u5206\u6B671\nPlot(def)"
+      myPos: {x: 522, y: 755}
+      myOption: 
+      diverConditions:
+      - Plot(def)
+    - name: "\u5206\u6B672\nElse"
+      myPos: {x: 522, y: 815}
+      myOption: 
+      diverConditions:
+      - Else

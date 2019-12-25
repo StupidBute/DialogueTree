@@ -87,13 +87,9 @@ public class sc_NpcDialog : MonoBehaviour {
 			yield return waitTime;
 		//玩家已回答，顯示npc應答
 		nowQuestion.answer = scGod.scOpt.Answer;
-		string nextKey = nowQuestion.options [scGod.scOpt.Answer].nextKey;
-		//char[] splitter = new char[]{':'};
-		//string[] dialogStr = nextKey.Split(splitter);
-
-		scGod.StartNpcDialogue (nextKey);
 		scGod.scOpt.Answer = -1;
-
+		StartNextDialogue (nowQuestion.options [nowQuestion.answer].nextKey);
+		//scGod.StartNpcDialogue (nowQuestion.options [nowQuestion.answer].nextKey);
 	}
 
 	void StartNextDialogue(string _key){

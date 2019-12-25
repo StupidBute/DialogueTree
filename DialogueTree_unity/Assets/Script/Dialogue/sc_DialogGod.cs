@@ -169,7 +169,7 @@ public class sc_DialogGod : MonoBehaviour {
 	public sc_NpcDialog GetNpcDialog(string name){ return NPCs [name]; }
 
 	bool IsNormalUnit(string[] _dialUnit){
-		return (_dialUnit.Length > 0 && _dialUnit [0] != "Name" && _dialUnit [0] != "Question" 
+		return (_dialUnit.Length > 0 && _dialUnit [0] != "Start" && _dialUnit [0] != "Question" 
 			&& _dialUnit [0] != "Dialogue" && _dialUnit[0] != "Diverge");
 	}
 	#endregion
@@ -220,27 +220,31 @@ public class sc_DialogGod : MonoBehaviour {
 		char[] caseSpliter = new char[]{','};
 
 		string[] conditionStr = _condition.Split (conditionSpliter, System.StringSplitOptions.RemoveEmptyEntries);
-		if (conditionStr.Length == 2) {
+
+		if (conditionStr [0] == "Plot") {
+			//Plot(劇情開關代碼)
+			if (conditionStr.Length < 2)
+				return false;
 			string[] possibleCases = conditionStr [1].Split (caseSpliter, System.StringSplitOptions.RemoveEmptyEntries);
-			if (conditionStr [0] == "Plot") {
-				//Plot(劇情開關代碼)
-				foreach(string plotFlag in possibleCases){
-					if (sc_God.ContainsSP (plotFlag))
-						return true;
-				}
-			} else {
-				//角色:問題(答案)
-				int playerAnswer = dc_questions [conditionStr [0]].answer;
-				foreach (string answerKey in possibleCases) {
-					if(answerKey == "All" && playerAnswer != -1)
-						return true;
-					else if (playerAnswer == int.Parse(answerKey))
-						return true;
-				}
+			foreach(string plotFlag in possibleCases){
+				if (sc_God.ContainsSP (plotFlag))
+					return true;
 			}
-		} else if (conditionStr.Length == 1) {
-			//Else
+		} else if (conditionStr [0] == "Else"){
+			//Else預設路線
 			return true;
+		} else {
+			//問題(答案)
+			if (conditionStr.Length < 2)
+				return false;
+			string[] possibleCases = conditionStr [1].Split (caseSpliter, System.StringSplitOptions.RemoveEmptyEntries);
+			int playerAnswer = dc_questions [conditionStr [0]].answer;
+			foreach (string answerKey in possibleCases) {
+				if(answerKey == "All" && playerAnswer != -1)
+					return true;
+				else if (playerAnswer == int.Parse(answerKey))
+					return true;
+			}
 		}
 		return false;
 	}
@@ -288,6 +292,7 @@ public class sc_DialogGod : MonoBehaviour {
 }
 
 #region Dialogue Classes
+[System.Serializable]
 public class DialogueSet{
 	public List<Dialog> dialogs = new List<Dialog> ();
 	public string nextKey = "";
@@ -298,6 +303,7 @@ public class DialogueSet{
 	}
 }
 
+[System.Serializable]
 public class Dialog{
 	public string text;
 	public string animKey = "";
@@ -312,6 +318,7 @@ public class Dialog{
 	}
 }
 
+[System.Serializable]
 public class Question{
 	public Dialog questionDial;
 	public List<Option> options = new List<Option>();
@@ -323,6 +330,7 @@ public class Question{
 	}
 }
 
+[System.Serializable]
 public class Option{
 	public string text;
 	public string nextKey;
@@ -332,6 +340,7 @@ public class Option{
 	}
 }
 
+[System.Serializable]
 public class DivergeUnit{
 	public List<string> conditions = new List<string>();
 	public string nextKey;

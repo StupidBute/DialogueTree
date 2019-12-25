@@ -4,6 +4,27 @@ using UnityEngine;
 using UnityEditor;
 
 public class MyFunctions{
+	static GUIStyle style_dropdown = Resources.Load<GUISkin>("GUISkin/NodeSkin").GetStyle ("dropdown");
+	static Texture2D tex_dropdownArrow = Resources.Load<Texture2D> ("GUISkin/Icons/dropdownArrow");
+
+	public static int GUIPopup(Rect rect, int index, string[] strs){
+		int value = EditorGUI.Popup (rect, index, strs, style_dropdown);
+		Rect rect_arrow = new Rect (0, 0, 13, 9);
+		rect_arrow.size *= rect.height / 40;
+		rect_arrow.position = new Vector2 (rect.xMax - rect_arrow.width - 10, rect.center.y - rect_arrow.height * 0.5f);
+		GUI.DrawTexture (rect_arrow, tex_dropdownArrow);
+		return value;
+	}
+
+	public static bool PopupMenu(Rect rect, string title){
+		bool click = GUI.Button (rect, title, style_dropdown);
+		Rect rect_arrow = new Rect (0, 0, 13, 9);
+		rect_arrow.size *= rect.height / 40;
+		rect_arrow.position = new Vector2 (rect.xMax - rect_arrow.width - 10, rect.center.y - rect_arrow.height * 0.5f);
+		GUI.DrawTexture (rect_arrow, tex_dropdownArrow);
+		return click;
+	}
+
 	public static Vector2 SnapPos(Vector2 size, Vector2 position, float range){
 		Vector2 center = position + 0.5f * size;
 		center.x = Mathf.Round (center.x / range) * range;
@@ -116,11 +137,9 @@ public class Node {
 			return null;
 	}
 
-	public bool HitLinkTest(Vector2 mousePos){
-		foreach (NodeLink _link in NextLink) {
-			if (_link.HitTest (mousePos))
-				return true;
-		}
+	virtual public bool HitLinkTest(Vector2 mousePos){
+		if (NextLink.Count > 0 && NextLink[0].HitTest (mousePos))
+			return true;
 		return false;
 	}
 #endregion
@@ -144,10 +163,10 @@ public class Node {
 	}
 
 	public void SetConnect(Node nextNode){
-		bool canMultiLink = (this.GetType () == typeof(QuestionNode) || this.GetType () == typeof(DivergeNode)) ? true : false;
-		NodeLink nl = new NodeLink (this, nextNode, canMultiLink);
+		NodeLink nl = new NodeLink (this, nextNode);
 		NextLink.Add (nl);
 		nextNode.PrevLink.Add (nl);
+		bool canMultiLink = this.GetType () == typeof(QuestionNode) || this.GetType () == typeof(DivergeNode);
 		if (!canMultiLink && NextLink.Count > 1)
 			NextLink [0].DeleteSelf ();
 	}
@@ -171,7 +190,12 @@ public class Node {
 	}
 
 	public void SetName(string _name){
-		nodeName = MyFunctions.SetName (MyFunctions.ClampString (_name, defaultName), this, DTGod.lst_Node);
+		nodeName = MyFunctions.SetName (MyFunctions.ClampString (_name, defaultName), this, DTGod.lst_node);
+	}
+
+	public string GetNextNodeName(){
+		//無下一條連結或多於一條連結，則回傳END
+		return NextLink.Count == 1 ? NextLink [0].nodeB.nodeName : "END";
 	}
 #endregion
 }
@@ -221,7 +245,7 @@ public class QuestionNode : Node{
 		defaultName = "新問答集";
 		SetName (defaultName);
 		myCharacter = DTGod.lst_chars [0];
-		options.Add (new SubNode (_dt, rect.center + new Vector2 (-35, 65), new Option ("選項內容", "END"), this));
+		options.Add (new SubNode (_dt, rect.center + new Vector2 (-35, 65), "選項內容", this));
 	}
 
 	override public void DrawSelf(Vector2 coordinate){
@@ -254,11 +278,23 @@ public class QuestionNode : Node{
 		foreach (SubNode sn in options)
 			sn.DrawMyLink ();
 	}
+
+	override public bool HitLinkTest(Vector2 mousePos){
+		foreach (SubNode optNode in options) {
+			if (optNode.HitLinkTest (mousePos))
+				return true;
+		}
+		return false;
+	}
+
+	public void DeleteOption(int index){
+		options [index].DeleteAllConnect ();
+		options.RemoveAt (index);
+	}
 }
 
 public class DivergeNode : Node{
 	public List<SubNode> diverges = new List<SubNode> ();
-	public List<string> defaultCondition = new List<string> ();
 
 	public DivergeNode(DialogueTree _dt, Vector2 _pos):base(_dt, _pos){
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DivergeNode");
@@ -267,8 +303,7 @@ public class DivergeNode : Node{
 		NameRect = new Rect (13, 28, 89, 20);
 		defaultName = "新分歧點";
 		SetName (defaultName);
-		defaultCondition.Add ("Else");
-		diverges.Add (new SubNode (_dt, rect.center + new Vector2 (-35, 65), new DivergeUnit (defaultCondition, "END"), this));
+		diverges.Add (new SubNode (_dt, rect.center + new Vector2 (-35, 65), new List<ConditionUnit>{ new ConditionUnit ("Else") }, this));
 	}
 
 	override public void DrawSelf(Vector2 coordinate){
@@ -298,18 +333,30 @@ public class DivergeNode : Node{
 		foreach (SubNode sn in diverges)
 			sn.DrawMyLink ();
 	}
+
+	override public bool HitLinkTest(Vector2 mousePos){
+		foreach (SubNode diverNode in diverges) {
+			if (diverNode.HitLinkTest (mousePos))
+				return true;
+		}
+		return false;
+	}
+
+	public void DeleteDiverge(int index){
+		diverges [index].DeleteAllConnect ();
+		diverges.RemoveAt (index);
+	}
 }
 
 public class SubNode : Node{
-	public Option myOption = null;
-	public DivergeUnit myDiverge = null;
+	//public Option myOption = null;
+	public string myOption = "";
+	//public DivergeUnit myDiverge = null;
+	public List<ConditionUnit> myDiverge = new List<ConditionUnit>();
 
-	#region diverge condition
 	public string[] conditionType = new string[]{ "劇情", "回答" };
-	public int cTypeIndex = 0;
-	#endregion
 
-	public SubNode(DialogueTree _dt, Vector2 _pos, Option opt, Node prevNode):base(_dt, _pos){
+	public SubNode(DialogueTree _dt, Vector2 _pos, string opt, Node prevNode):base(_dt, _pos){
 		myOption = opt;
 		prevNode.SetConnect (this);
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/OptionUnit");
@@ -317,11 +364,11 @@ public class SubNode : Node{
 		size = new Vector2 (70, 44);
 		SetRects (_pos);
 		NameRect = new Rect (7, 7, 62, 36);
-		nodeName = myOption.text;
+		nodeName = myOption;
 		style_name = mySkin.GetStyle ("optionunit");
 	}
 
-	public SubNode(DialogueTree _dt, Vector2 _pos, DivergeUnit diver, Node prevNode):base(_dt, _pos){
+	public SubNode(DialogueTree _dt, Vector2 _pos, List<ConditionUnit> diver, Node prevNode):base(_dt, _pos){
 		myDiverge = diver;
 		prevNode.SetConnect (this);
 		tex_normal = Resources.Load<Texture2D> ("GUISkin/Nodes/DivergeUnit");
@@ -329,21 +376,21 @@ public class SubNode : Node{
 		size = new Vector2 (70, 44);
 		SetRects (_pos);
 		NameRect = new Rect (7, 7, 62, 36);
-		nodeName = myDiverge.conditions [0];
+		nodeName = myDiverge [0].condition;
 		style_name = mySkin.GetStyle ("divergeunit");
 	}
 
 	public void Draw(Vector2 coordinate, int index){
-		if (myOption != null)
-			nodeName = "選項" + index.ToString () + "\n" + myOption.text;
+		if (myOption != "")
+			nodeName = "選項" + index.ToString () + "\n" + myOption;
 		else
-			nodeName = "分歧" + index.ToString () + "\n" + myDiverge.conditions [0];
+			nodeName = "分歧" + index.ToString () + "\n" + myDiverge [0].condition;
 		base.DrawSelf (coordinate);
 	}
 }
 
 public class NodeLink{
-	Node nodeA, nodeB;
+	public Node nodeA, nodeB;
 	Rect rectEdit;
 	bool editable = true;
 
@@ -354,10 +401,10 @@ public class NodeLink{
 	Vector2 arrowSize = new Vector2 (10, 10);
 	Vector2 editSize = new Vector2 (15, 15);
 
-	public NodeLink(Node na, Node nb, bool canMultiLink){
+	public NodeLink(Node na, Node nb){
 		nodeA = na;
 		nodeB = nb;
-		editable = !canMultiLink;
+		editable = nodeA.GetType () != typeof(QuestionNode) && nodeA.GetType () != typeof(DivergeNode);
 
 		tex_arrows [0] = Resources.Load<Texture2D> ("GUISkin/Icons/ArrowR");
 		tex_arrows [1] = Resources.Load<Texture2D> ("GUISkin/Icons/ArrowL");
@@ -456,13 +503,34 @@ public class NodeLink{
 		nodeB.DeleteLink (true, this);
 	}
 }
+
+public class ConditionUnit{
+	public string condition;
+	public QuestionNode myQuestion = null;
+	char[] splitter = new char[]{'(', ')'};
+
+	public ConditionUnit(string _con){
+		condition = _con;
+	}
+
+	public void UpdateQuestion(QuestionNode qn){
+		myQuestion = qn;
+		UpdateQuestion ();
+	}
+
+	public void UpdateQuestion(){
+		string[] conditionSplit = condition.Split (splitter);
+		string newNodeName = myQuestion == null ? "N/A" : myQuestion.nodeName;
+		condition = newNodeName + "(" + conditionSplit [1] + ")";
+	}
+}
 #endregion
 
 #region 左面板相關
 
 public class LeftPanel{
 	DialogueTree DTGod;
-	GUIStyle titleStyle, labelStyle;
+	GUIStyle titleStyle, editStyle;
 	Rect rect_left, rect_titleL, rect_add;
 	Texture2D tex_left, tex_add;
 	Character selectedChar = null;
@@ -470,13 +538,13 @@ public class LeftPanel{
 	public LeftPanel(DialogueTree _dt){
 		GUISkin skin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
 		titleStyle = skin.GetStyle ("panelTitle");
-		labelStyle = skin.GetStyle ("label");
+		editStyle = skin.GetStyle ("editbutton");
 
 		rect_left = new Rect (0, 0, 120, 90);
 		rect_titleL = new Rect (10, 10, 100, 30);
-		rect_add = new Rect (10, 69, 75, 15);
+		rect_add = new Rect (10, 69, 70, 11);
 
-		tex_add = Resources.Load<Texture2D> ("GUISkin/Icons/AddIcon");
+		tex_add = Resources.Load<Texture2D> ("GUISkin/Icons/AddCharacter");
 		MyFunctions.SetTexture (ref tex_left, new Color (0, 0, 0, 0.2f));
 		DTGod = _dt;
 	}
@@ -490,24 +558,19 @@ public class LeftPanel{
 		}
 		
 		if (e.button == 0) {
-			if (rect_add.Contains (e.mousePosition)) {
-				DTGod.lst_chars.Add (new Character (DTGod));
-				DTGod.rightPanel.SetNameArray ();
-			} else {
-				bool hitChar = false;
-				for (int i = 1; i < DTGod.lst_chars.Count; i++) {
-					Character _c = DTGod.lst_chars [i];
-					if (_c.HitTest (e)) {
-						if (_c != selectedChar)
-							ResetSelected ();
-						selectedChar = _c;
-						hitChar = true;
-						break;
-					}
+			bool hitChar = false;
+			for (int i = 1; i < DTGod.lst_chars.Count; i++) {
+				Character _c = DTGod.lst_chars [i];
+				if (_c.HitTest (e)) {
+					if (_c != selectedChar)
+						ResetSelected ();
+					selectedChar = _c;
+					hitChar = true;
+					break;
 				}
-				if (!hitChar)
-					ResetSelected ();
 			}
+			if (!hitChar)
+				ResetSelected ();
 		} else if (e.button == 1) {
 			if (selectedChar != null && selectedChar.HitTest (e)) {
 				GenericMenu menu = new GenericMenu ();
@@ -539,10 +602,12 @@ public class LeftPanel{
 
 		for (int i = 1; i < DTGod.lst_chars.Count; i++)
 			DTGod.lst_chars [i].DrawSelf (i-1);
-		
-		rect_add = new Rect (10, 21 + DTGod.lst_chars.Count * 24, 75, 15);
-		GUI.DrawTexture (new Rect (10, 21 + DTGod.lst_chars.Count * 24, 12, 12), tex_add);
-		GUI.Label (new Rect (28, 16 + DTGod.lst_chars.Count * 24, 65, 20), "新增角色", labelStyle);
+
+		rect_add.position = new Vector2 (10, 21 + DTGod.lst_chars.Count * 24);
+		if (GUI.Button (rect_add, tex_add, editStyle)) {
+			DTGod.lst_chars.Add (new Character (DTGod, "新角色", 0));
+			DTGod.rightPanel.SetNameArray ();
+		}
 	}
 }
 
@@ -562,7 +627,7 @@ public class Character{
 	public int colorIndex = 0;
 	DialogueTree DTGod;
 
-	public Character(DialogueTree _dt){
+	public Character(DialogueTree _dt, string _name, int _index){
 		GUISkin skin = Resources.Load<GUISkin> ("GUISkin/NodeSkin");
 		nameStyle = skin.GetStyle ("charName");
 		fieldStyle = skin.GetStyle ("textfield");
@@ -574,8 +639,8 @@ public class Character{
 		}
 		MyFunctions.SetTexture (ref tex_choose, new Color (.35f, .35f, .35f, .9f));
 		DTGod = _dt;
-		name = MyFunctions.SetName (DTGod.lst_chars.Count == 0 ? "N/A" : "新角色", this, DTGod.lst_chars);
-		colorIndex = DTGod.lst_chars.Count == 0 ? 7 : 0;
+		name = MyFunctions.SetName (_name, this, DTGod.lst_chars);
+		colorIndex = _index;
 	}
 
 	public bool HitTest(Event e){
@@ -686,14 +751,15 @@ public class ColorWindow{
 #region 右面版相關
 public class RightPanel{
 	DialogueTree DTGod;
-	GUIStyle style_subtitle, style_label, style_ttf, style_tf, style_dt, style_ta, style_dropdown, style_button, style_edit;
-	Texture2D tex_box, tex_bg, tex_scroller, tex_outline, tex_extent, tex_unextent, tex_edit, tex_remove, tex_noRemove;
+	GUIStyle style_subtitle, style_label, style_ttf, style_tf, style_dt, style_ta, style_disdropdown, style_button, style_edit;
+	Texture2D tex_box, tex_bg, tex_scroller, tex_outline, tex_extent, tex_unextent, tex_edit, tex_add, tex_remove, tex_noRemove;
 	Node prevSelect = null;
 	Rect boxRect = new Rect (0, 0, 261, 70), 
 	contentRect = new Rect(0, 0, 245, 60),
 	scrollerRect = new Rect(0, 102, 9, 300),//y:2 ~ (boxRect.height-2)
 	extentRect = new Rect (0, 0, 261, 15);
 
+	List<QuestionNode> foundQNode;
 	bool extent = false, scrollOn = false;
 	float scrollPos = 0;
 	string[] nameArray = new string[]{ "none" };
@@ -708,6 +774,7 @@ public class RightPanel{
 		tex_extent = Resources.Load<Texture2D> ("GUISkin/extent");
 		tex_unextent = Resources.Load<Texture2D> ("GUISkin/unextent");
 		tex_edit = Resources.Load<Texture2D> ("GUISkin/Icons/EditGear1");
+		tex_add = Resources.Load<Texture2D> ("GUISkin/Icons/AddCondition");
 		tex_remove = Resources.Load<Texture2D> ("GUISkin/Icons/RemoveIcon");
 		tex_noRemove = Resources.Load<Texture2D> ("GUISkin/Icons/NoRemoveIcon");
 
@@ -718,9 +785,11 @@ public class RightPanel{
 		style_tf = skin.GetStyle ("textfield");
 		style_dt = skin.GetStyle ("disabledtext");
 		style_ta = skin.GetStyle ("textarea");
-		style_dropdown = skin.GetStyle ("dropdown");
+		style_disdropdown = skin.GetStyle ("disableddropdown");
 		style_button = skin.GetStyle ("button");
 		style_edit = skin.GetStyle ("editbutton");
+
+		SetQNodeList ();
 	}
 
 	#region main
@@ -788,6 +857,13 @@ public class RightPanel{
 		}
 	}
 
+	public void SetQNodeList(){
+		List<Node> tmp = new List<Node> (DTGod.lst_node.FindAll (n => n.GetType () == typeof(QuestionNode)));
+		foundQNode = new List<QuestionNode> ();
+		foreach (Node n in tmp)
+			foundQNode.Add ((QuestionNode)n);
+	}
+
 	public void Scroll(float dHeight){
 		scrollerRect.y += dHeight;
 		scrollPos = (contentRect.height - boxRect.height) * (scrollerRect.y - 2) / (boxRect.height - scrollerRect.height - 4);
@@ -803,13 +879,12 @@ public class RightPanel{
 		boxRect.x = windowSize.x - 260;
 		boxRect.height = extent ? windowSize.y - 15 : contentRect.height;
 		contentRect.position = Mathf.Round(scrollPos) * Vector2.down;
+		if (DTGod.SelectNode != prevSelect) {
+			prevSelect = DTGod.SelectNode;
+			scrollerRect.y = 2;
+			scrollPos = 0;
+		}
 		if (CanExtent ()) {
-			if (DTGod.SelectNode != prevSelect) {
-				prevSelect = DTGod.SelectNode;
-				scrollerRect.y = 2;
-				scrollPos = 0;
-			}
-
 			extentRect.x = boxRect.x;
 			extentRect.y = boxRect.height;
 		} else
@@ -862,7 +937,7 @@ public class RightPanel{
 		int index = DTGod.lst_chars.FindIndex (d => d == n.myCharacter);
 		index = index < 0 ? 0 : index;
 		GUI.Label (new Rect (15, 48, 30, 25), "角色", style_subtitle);
-		n.myCharacter = DTGod.lst_chars [EditorGUI.Popup (new Rect (51, 47, 184, 27), index, nameArray, style_dropdown)];
+		n.myCharacter = DTGod.lst_chars [MyFunctions.GUIPopup (new Rect (51, 47, 184, 27), index, nameArray)];
 		contentRect.height = 91;
 
 		if (extent) {
@@ -885,18 +960,18 @@ public class RightPanel{
 		int index = DTGod.lst_chars.FindIndex (d => d == n.myCharacter);
 		index = index < 0 ? 0 : index;
 		GUI.Label (new Rect (15, 48, 30, 25), "角色", style_subtitle);
-		n.myCharacter = DTGod.lst_chars [EditorGUI.Popup (new Rect (51, 47, 184, 27), index, nameArray, style_dropdown)];
+		n.myCharacter = DTGod.lst_chars [MyFunctions.GUIPopup (new Rect (51, 47, 184, 27), index, nameArray)];
 		contentRect.height = 91;
 
 		if (extent) {
 			contentRect.height += 10;
 			DrawDialogue (n.questionDial, "問題");
 			for (int i = 0; i < n.options.Count; i++)
-				DrawQuestion (n, n.options [i]);
+				DrawOption (n, i);
 			contentRect.height += 20;
 			if (n.options.Count < 4) {
 				if (GUI.Button (new Rect (10, contentRect.height, 230, 40), "新增選項", style_button))
-					n.options.Add (new SubNode (DTGod, n.options [n.options.Count - 1].rect.position + new Vector2 (100, 0), new Option ("", "END"), n));
+					n.options.Add (new SubNode (DTGod, n.options [n.options.Count - 1].rect.position + new Vector2 (100, 0), "選項內容", n));
 			} else
 				GUI.Label (new Rect (10, contentRect.height, 230, 40), "選項數已達上限", style_label);
 			
@@ -912,7 +987,7 @@ public class RightPanel{
 		if (extent) {
 			contentRect.height += 10;
 			for (int i = 0; i < n.diverges.Count; i++)
-				DrawDiverge (n, n.diverges [i]);
+				DrawDiverge (n, i);
 			contentRect.height += 20;
 			if (GUI.Button (new Rect (10, contentRect.height, 230, 40), "新增分歧", style_button)) {
 				int insertIndex = n.diverges.Count - 1;
@@ -921,7 +996,7 @@ public class RightPanel{
 					new SubNode (
 						DTGod, 
 						n.diverges [Mathf.Clamp (insertIndex-1, 0, 100)].rect.position + new Vector2 (100, 0), 
-						new DivergeUnit (n.defaultCondition, "END"), 
+						new List<ConditionUnit>{ new ConditionUnit ("Plot") }, 
 						n
 					)
 				);
@@ -950,7 +1025,7 @@ public class RightPanel{
 		height += 5;
 		GUI.Label (new Rect (10, height, 30, 18), "動作", style_label);
 		d.animKey = EditorGUI.TextField (new Rect (40, height, 100, 18), d.animKey, style_tf);
-		GUI.Label (new Rect (155, height, 30, 18), "字體", style_label);
+		GUI.Label (new Rect (150, height, 30, 18), "字體", style_label);
 		d.size = EditorGUI.IntField (new Rect (180, height, 60, 18), d.size, style_tf);
 		height += 25;
 		d.text = EditorGUI.TextArea (new Rect (10, height, 230, 50), d.text, style_ta);
@@ -960,46 +1035,141 @@ public class RightPanel{
 		contentRect.height += 180;
 	}
 
-	void DrawQuestion(QuestionNode n, SubNode optNode){
+	void DrawOption(QuestionNode n, int index){
+		SubNode optNode = n.options [index];
 		if (n.options.Count > 1) {
 			if (GUI.Button (new Rect (7, contentRect.height + 5, 12, 12), tex_remove, style_edit)) {
-				optNode.DeleteAllConnect ();
-				n.options.Remove (optNode);
+				n.DeleteOption (index);
 				return;
 			}
 		} else
 			GUI.DrawTexture (new Rect (7, contentRect.height + 5, 12, 12), tex_noRemove);
 		GUI.Label (new Rect (25, contentRect.height+1, 40, 20), optNode.nodeName.Split(new char[]{'\n'})[0], style_subtitle);
-		optNode.myOption.text = EditorGUI.TextField (new Rect (65, contentRect.height, 175, 24), optNode.myOption.text, style_tf);
+		optNode.myOption = MyFunctions.ClampString(EditorGUI.TextField (new Rect (65, contentRect.height, 175, 24), optNode.myOption, style_tf), "選項內容");
 		contentRect.height += 35;
 	}
 
-	void DrawDiverge(DivergeNode n,  SubNode diverNode){
-		if (n.diverges.Count > 1) {
-			if (GUI.Button (new Rect (7, contentRect.height + 5, 12, 12), tex_remove, style_edit)) {
-				diverNode.DeleteAllConnect ();
-				n.diverges.Remove (diverNode);
+	//繪製分歧Unit
+	void DrawDiverge(DivergeNode n, int index){
+		SubNode diverNode = n.diverges [index];
+		//右上角編輯鈕，僅用來移除
+		bool elseCondition = diverNode.myDiverge [0].condition == "Else";
+		if (!elseCondition) {
+			if (GUI.Button (new Rect (contentRect.width - 15, contentRect.height, 22, 22), tex_edit, style_edit)) {
+				n.DeleteDiverge (index);
 				return;
 			}
 		} else
-			GUI.DrawTexture (new Rect (7, contentRect.height + 5, 12, 12), tex_noRemove);
-		GUI.Label (new Rect (25, contentRect.height + 1, 40, 20), diverNode.nodeName.Split(new char[]{'\n'})[0], style_subtitle);
-		GUI.DrawTexture (new Rect (5, contentRect.height + 20, 240, 40 + diverNode.myDiverge.conditions.Count * 30), tex_bg);
+			GUI.Button (new Rect (contentRect.width - 15, contentRect.height, 22, 22), tex_edit, style_edit);
+		GUI.Label (new Rect (7, contentRect.height + 1, 40, 20), diverNode.nodeName.Split(new char[]{'\n'})[0], style_subtitle);
+
+		//繪製此分歧Unit的背景和各條件unit
 		contentRect.height += 25;
-		for(int i = 0; i < diverNode.myDiverge.conditions.Count; i++)
-			DrawCondition (diverNode, i);
-		contentRect.height += 10;
-		if (GUI.Button (new Rect (50, contentRect.height, 100, 20), "新增條件", style_button)) {
-			diverNode.myDiverge.conditions.Add ("Else");
+		if (elseCondition) {
+			GUI.DrawTexture (new Rect (5, contentRect.height, 240, 42), tex_bg);
+			contentRect.height += 7;
+			DrawCondition (diverNode, 0);
+		} else {
+			//背景
+			GUI.DrawTexture (new Rect (5, contentRect.height, 240, 37 + diverNode.myDiverge.Count * 30), tex_bg);
+			contentRect.height += 7;
+
+			//各條件unit
+			for(int i = 0; i < diverNode.myDiverge.Count; i++)
+				DrawCondition (diverNode, i);
+			contentRect.height += 5;
+
+			//新增條件
+			if (GUI.Button (new Rect (12, contentRect.height, 76, 13), tex_add, style_edit))
+				diverNode.myDiverge.Add (new ConditionUnit ("Plot"));
 		}
-		contentRect.height += 35;
+		contentRect.height += 60;
 	}
 
-	void DrawCondition(SubNode n, int index){
-		n.cTypeIndex = EditorGUI.Popup (new Rect (10, contentRect.height, 80, 25), n.cTypeIndex, n.conditionType, style_dropdown);
-		contentRect.height += 30;
-	}
+	void DrawCondition(SubNode diverNode, int index){
+		ConditionUnit nowCondition = diverNode.myDiverge [index];
+
+	#region 讀取舊狀態
+		string[] conditionSplit = nowCondition.condition.Split (new char[]{ '(', ')' }, System.StringSplitOptions.RemoveEmptyEntries);
+		int typeIndex;
+		if (conditionSplit [0] == "Plot")
+			typeIndex = 0;
+		else if (conditionSplit [0] == "Else")
+			typeIndex = 2;
+		else
+			typeIndex = 1;
 	#endregion
+
+	#region 不可更改屬性的Else狀態
+		if (typeIndex == 2) {
+			GUI.DrawTexture (new Rect (12, contentRect.height + 6, 13, 13), tex_noRemove);
+			GUI.Label (new Rect (32, contentRect.height, 63, 25), "Else", style_disdropdown);
+			GUI.Label (new Rect (100, contentRect.height, 135, 25), "預設路線", style_dt);
+			contentRect.height += 30;
+			return;
+		}
+	#endregion
+
+	#region 非Else狀態
+		//移除按鈕
+		if(diverNode.myDiverge.Count > 1){
+			if(GUI.Button(new Rect (12, contentRect.height + 6, 13, 13), tex_remove, style_edit))
+				diverNode.myDiverge.RemoveAt(index);
+		}else
+			GUI.DrawTexture (new Rect (12, contentRect.height + 6, 13, 13), tex_noRemove);
+
+		//(劇情)(回答)下拉選單
+		int newTypeIndex = typeIndex;
+		newTypeIndex = MyFunctions.GUIPopup (new Rect (32, contentRect.height, 63, 25), newTypeIndex, diverNode.conditionType);
+
+
+		if (newTypeIndex != typeIndex) {		//若選擇了新的狀態，則設定條件初始值
+			if(newTypeIndex == 0)
+				nowCondition.condition = "Plot";
+			else
+				nowCondition.condition = "N/A(-1)";
+		}else{									//若沒有選擇新狀態，則根據現有狀態顯示內容
+			if (typeIndex == 0) {					//Plot(Key)
+				string key = EditorGUI.TextField (new Rect (100, contentRect.height, 135, 25), conditionSplit.Length > 1? conditionSplit [1]:"", style_tf);
+				key = key.Split(new char[]{' '}, System.StringSplitOptions.RemoveEmptyEntries).Length == 0? "" : "(" + key + ")";
+				nowCondition.condition = "Plot" + key;
+			} else {								//Character:Question(key)
+				int keyNumber = EditorGUI.IntField (new Rect (205, contentRect.height, 30, 25), "", int.Parse (conditionSplit [1]), style_tf);
+
+				QuestionNode nowQNode = foundQNode.Find(n => n == nowCondition.myQuestion);
+				string nowQNodeStr = "";
+				if(nowQNode == null){
+					nowQNodeStr = "N/A";
+					nowCondition.UpdateQuestion(null);
+				}else
+					nowQNodeStr = nowQNode.nodeName;
+				nowCondition.condition = nowQNodeStr + "(" + keyNumber + ")";	
+
+				if (MyFunctions.PopupMenu (new Rect (100, contentRect.height, 100, 25), nowQNodeStr))
+					ConditionDropdown (nowCondition);
+			}
+			contentRect.height += 30;
+		}
+	#endregion
+
+	}
+
+	#endregion
+
+	#region Dropdown
+	void ConditionDropdown(ConditionUnit unit){
+		GenericMenu menu = new GenericMenu ();
+		List<Node> foundNode = new List<Node> (DTGod.lst_node.FindAll (n => n.GetType () == typeof(QuestionNode)));
+		if (foundNode.Count == 0) {
+			menu.AddDisabledItem (new GUIContent ("無已創建的問答集"));
+		} else {
+			foreach (Node n in foundNode) {
+				QuestionNode qn = (QuestionNode)n;
+				menu.AddItem (new GUIContent (qn.nodeName), false, () => unit.UpdateQuestion (qn));
+			}
+		}
+		menu.ShowAsContext ();
+	}
 
 	void EditDialNode(DialogueNode n, int index){
 		EditorGUI.FocusTextInControl ("");
@@ -1009,6 +1179,8 @@ public class RightPanel{
 			() => n.lst_dial.Insert (index + 1, new Dialog ("idle", 12, "X", "")));
 		menu.ShowAsContext ();
 	}
+	#endregion
  }
 #endregion
+
 
