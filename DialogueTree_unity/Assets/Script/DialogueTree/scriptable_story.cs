@@ -21,6 +21,7 @@ public class CharInfo{
 		colorIndex = c.colorIndex;
 	}
 }
+
 [System.Serializable]
 public class NodeInfo{
 	public string name;
@@ -36,6 +37,11 @@ public class NodeInfo{
 	}
 
 	virtual public void Reconnect (DialogueTree _dt){}
+
+	protected string GetNameWithoutChar(string _name){
+		string[] nameSplit = _name.Split (new char[]{ ':' });
+		return nameSplit [nameSplit.Length - 1];
+	}
 }
 
 [System.Serializable]
@@ -54,7 +60,7 @@ public class StartNodeInfo : NodeInfo{
 	override public void Reconnect(DialogueTree _dt){
 		if (nextKey == "END")
 			return;
-		_dt.GetNodeByName (name).SetConnect (_dt.GetNodeByName (nextKey));
+		_dt.GetNodeByName (name).SetConnect (_dt.GetNodeByName (GetNameWithoutChar (nextKey)));
 	}
 }
 
@@ -67,12 +73,13 @@ public class DialogueNodeInfo : NodeInfo{
 	public DialogueNodeInfo(Node n) : base(n){
 		DialogueNode dn = (DialogueNode)n;
 		charName = dn.myCharacter.name;
+		name = charName + ":" + name;
 		myDialSet = new DialogueSet (dn.lst_dial, dn.GetNextNodeName ());
 	}
 
 	override public Node Cast2Node(DialogueTree _dt){
 		DialogueNode n = new DialogueNode (_dt, myPos);
-		n.nodeName = name;
+		n.nodeName = GetNameWithoutChar (name);
 		n.myCharacter = _dt.lst_chars.Find (c => c.name == charName);
 		n.lst_dial = myDialSet.dialogs;
 		return n;
@@ -81,7 +88,7 @@ public class DialogueNodeInfo : NodeInfo{
 	override public void Reconnect(DialogueTree _dt){
 		if (myDialSet.nextKey == "END")
 			return;
-		_dt.GetNodeByName (name).SetConnect (_dt.GetNodeByName (myDialSet.nextKey));
+		_dt.GetNodeByName (GetNameWithoutChar (name)).SetConnect (_dt.GetNodeByName (GetNameWithoutChar (myDialSet.nextKey)));
 	}
 }
 
@@ -95,6 +102,7 @@ public class QuestionNodeInfo : NodeInfo{
 	public QuestionNodeInfo(Node n) : base(n){
 		QuestionNode qn = (QuestionNode)n;
 		charName = qn.myCharacter.name;
+		name = charName + ":" + name;
 		List<Option> lst_opt = new List<Option> ();
 		foreach (SubNode opt in qn.options) {
 			//opt.myOption.nextKey = opt.GetNextNodeName ();
@@ -106,7 +114,7 @@ public class QuestionNodeInfo : NodeInfo{
 
 	override public Node Cast2Node(DialogueTree _dt){
 		QuestionNode n = new QuestionNode (_dt, myPos);
-		n.nodeName = name;
+		n.nodeName = GetNameWithoutChar (name);
 		n.myCharacter = _dt.lst_chars.Find (c => c.name == charName);
 		n.questionDial = myQuestion.questionDial;
 		n.DeleteOption (0);
@@ -116,10 +124,10 @@ public class QuestionNodeInfo : NodeInfo{
 	}
 
 	override public void Reconnect(DialogueTree _dt){
-		QuestionNode qn = (QuestionNode)_dt.GetNodeByName (name);
+		QuestionNode qn = (QuestionNode)_dt.GetNodeByName (GetNameWithoutChar (name));
 		for (int i = 0; i < myQuestion.options.Count; i++) {
-			if(myQuestion.options [i].nextKey != "END")
-				qn.options [i].SetConnect (_dt.GetNodeByName (myQuestion.options [i].nextKey));
+			if (myQuestion.options [i].nextKey != "END")
+				qn.options [i].SetConnect (_dt.GetNodeByName (GetNameWithoutChar (myQuestion.options [i].nextKey)));
 		}
 	}
 }
@@ -133,8 +141,14 @@ public class DivergeNodeInfo : NodeInfo{
 		foreach (SubNode diver in dn.diverges) {
 			diverInfos.Add (new SubNodeInfo (diver));
 			List<string> conditions = new List<string> ();
-			foreach (ConditionUnit con in diver.myDiverge)
-				conditions.Add (con.condition);
+			foreach (ConditionUnit con in diver.myDiverge) {
+				if (con.myQuestion != null) {
+					string conStr = con.myQuestion.myCharacter.name + ":" + con.condition;
+					conditions.Add (conStr);
+				}else
+					conditions.Add (con.condition);
+			}
+				
 			myDiverges.Add (new DivergeUnit (conditions, diver.GetNextNodeName ()));
 		}
 			
@@ -153,7 +167,7 @@ public class DivergeNodeInfo : NodeInfo{
 		DivergeNode dn = (DivergeNode)_dt.GetNodeByName (name);
 		for (int i = 0; i < myDiverges.Count; i++) {
 			if (myDiverges [i].nextKey != "END")
-				dn.diverges [i].SetConnect (_dt.GetNodeByName (myDiverges [i].nextKey));
+				dn.diverges [i].SetConnect (_dt.GetNodeByName (GetNameWithoutChar (myDiverges [i].nextKey)));
 		}
 	}
 }
@@ -180,8 +194,12 @@ public class SubNodeInfo : NodeInfo{
 			List<ConditionUnit> conditionUnits = new List<ConditionUnit> ();
 			foreach (string str in diverConditions)
 				conditionUnits.Add (new ConditionUnit (str));
-			foreach (ConditionUnit con in conditionUnits)
-				con.myQuestion = (QuestionNode)_dt.GetNodeByName (con.condition.Split (new char[]{ '(', ')' }) [0]);
+			foreach (ConditionUnit con in conditionUnits) {
+				string charName = con.condition.Split (new char[]{ '(', ')' }) [0];
+				if (charName != "Plot")
+					con.myQuestion = (QuestionNode)_dt.GetNodeByName (charName);
+			}
+				
 			return new SubNode (_dt, myPos, conditionUnits, preNode);
 		}
 			

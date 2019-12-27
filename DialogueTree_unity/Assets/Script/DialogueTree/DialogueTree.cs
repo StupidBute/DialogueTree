@@ -279,13 +279,6 @@ public class DialogueTree : EditorWindow {
 #endregion
 
 #region file
-	/*
-	public void LoadStoryAsset(){
-		if (Selection.activeObject == null || Selection.activeObject.GetType () != typeof(scriptable_story))
-			return;
-		scriptable_story story = (scriptable_story)Selection.activeObject;
-	}*/
-
 	void OpenFile(){
 		string path = EditorUtility.OpenFilePanel("開啟劇情檔案", "", "asset");
 		if (path == "")

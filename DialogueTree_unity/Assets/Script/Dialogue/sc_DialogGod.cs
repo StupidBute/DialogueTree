@@ -5,9 +5,11 @@ using UnityEngine.UI;
 using System.IO;
 
 public class sc_DialogGod : MonoBehaviour {
-	public string[] ReadFileNames;
+	//public string[] ReadFileNames;
 	public sc_Option scOpt;
 
+	[SerializeField]
+	scriptable_story story;
 	[System.NonSerialized]
 	public Transform playerTR;
 	[System.NonSerialized]
@@ -21,9 +23,8 @@ public class sc_DialogGod : MonoBehaviour {
 	public Dictionary<string, DialogueSet> dc_dialogues = new Dictionary<string, DialogueSet> ();
 	public Dictionary<string, Question> dc_questions = new Dictionary<string, Question> ();
 	public Dictionary<string, List<DivergeUnit>> dc_diverges = new Dictionary<string, List<DivergeUnit>> ();
-	public scriptable_story myStory;
-	List<string> list_talkingNPC = new List<string>();
 
+	List<string> list_talkingNPC = new List<string>();
 
 	void Awake () {
 		myPlayer = GameObject.FindGameObjectWithTag ("Player");
@@ -31,21 +32,28 @@ public class sc_DialogGod : MonoBehaviour {
 		scOpt = myPlayer.GetComponentInChildren<sc_Option>();
 		playerTR = myPlayer.transform;
 
+		ReadStoryAsset ();
+		/*
 		if (ReadFileNames.Length != 0) {
 			foreach (string _str in ReadFileNames)
 				ReadInOneFile (true, _str);
-		}
-
-		/*
-		foreach (KeyValuePair<string, DialogueSet> ds in dc_dialogues) {
-			print ("=====" + ds.Key + "=====");
-			foreach (Dialog d in ds.Value.dialogs)
-				print (d.text);
-			print ("===============");
 		}*/
   	}
 
 	#region 讀入與儲存對話文件
+	void ReadStoryAsset(){
+		
+		foreach (StartNodeInfo info in story.lst_startNodeInfo)
+			Plot.Add (info.name, info.nextKey);
+		foreach (DialogueNodeInfo info in story.lst_dialogueNodeInfo)
+			dc_dialogues.Add (info.name, info.myDialSet);
+		foreach (QuestionNodeInfo info in story.lst_questionNodeInfo)
+			dc_questions.Add (info.name, info.myQuestion);
+		foreach (DivergeNodeInfo info in story.lst_divergeNodeInfo)
+			dc_diverges.Add (info.name, info.myDiverges);
+	}
+
+	/*	舊版讀入對話方法
 	public void ReadInOneFile(bool _loadResources, string fileName){
 		if (ReadFile (_loadResources, fileName))
 			StoreDialogue ();
@@ -141,6 +149,10 @@ public class sc_DialogGod : MonoBehaviour {
 		return new Dialog (animKey, size, command, _text);
 	}
 
+	bool IsNormalUnit(string[] _dialUnit){
+		return (_dialUnit.Length > 0 && _dialUnit [0] != "Start" && _dialUnit [0] != "Question" 
+			&& _dialUnit [0] != "Dialogue" && _dialUnit[0] != "Diverge");
+	}*/
 	#endregion
 
 	#region 開啟對話
@@ -167,11 +179,6 @@ public class sc_DialogGod : MonoBehaviour {
 	public void NpcRegister (string _name, sc_NpcDialog _npcDial){ NPCs.Add (_name, _npcDial); }
 
 	public sc_NpcDialog GetNpcDialog(string name){ return NPCs [name]; }
-
-	bool IsNormalUnit(string[] _dialUnit){
-		return (_dialUnit.Length > 0 && _dialUnit [0] != "Start" && _dialUnit [0] != "Question" 
-			&& _dialUnit [0] != "Dialogue" && _dialUnit[0] != "Diverge");
-	}
 	#endregion
 
 	#region 分歧點相關
@@ -190,30 +197,14 @@ public class sc_DialogGod : MonoBehaviour {
 	}
 
 	bool JudgeCondition(List<string> conditions){
-		char[] AndSpliter = new char[]{ '+' };
-
-		foreach (string _condition in conditions) {
-			//進入每個or的條件
-			string[] conditionAnd = _condition.Split (AndSpliter);
-			if (conditionAnd.Length > 1) {
-				//有and的條件
-				bool conditionPass = true;
-				foreach (string _and in conditionAnd) {
-					if (!JudgeSingleCondition (_and)) {
-						conditionPass = false;
-						break;
-					}
-				}
-				if (conditionPass)
-					return true;
-			} else {
-				//單一條件
-				if (JudgeSingleCondition (_condition))
-					return true;
+		bool conditionPass = true;
+		foreach (string con in conditions) {
+			if (!JudgeSingleCondition (con)) {
+				conditionPass = false;
+				break;
 			}
-
 		}
-		return false;
+		return conditionPass;
 	}
 	bool JudgeSingleCondition(string _condition){
 		char[] conditionSpliter = new char[]{ '(', ')' };
@@ -227,7 +218,7 @@ public class sc_DialogGod : MonoBehaviour {
 				return false;
 			string[] possibleCases = conditionStr [1].Split (caseSpliter, System.StringSplitOptions.RemoveEmptyEntries);
 			foreach(string plotFlag in possibleCases){
-				if (sc_God.ContainsSP (plotFlag))
+				if (sc_God.ContainsPF (plotFlag))
 					return true;
 			}
 		} else if (conditionStr [0] == "Else"){

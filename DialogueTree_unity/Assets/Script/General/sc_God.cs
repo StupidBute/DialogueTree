@@ -39,7 +39,7 @@ public class sc_God : MonoBehaviour {
 	};
 	static public State StoryState;
 	static public bool fastDial = false;
-	static protected List<i_PlotFlag> SP_Listener = new List<i_PlotFlag> ();
+	static protected List<i_PlotFlag> PF_Listener = new List<i_PlotFlag> ();
 	static protected List<string> PlotFlags = new List<string> ();
 
 	void Awake () {
@@ -60,7 +60,7 @@ public class sc_God : MonoBehaviour {
 		MainCam = new CamInfo (cam, scCam, camTR, camAnim);
 		ChangeScene (true, 2f, 0);
 		PlotFlags.Clear ();
-		SP_Listener.Clear ();
+		PF_Listener.Clear ();
 		StoryState = State.開始;
 	}
 
@@ -81,24 +81,24 @@ public class sc_God : MonoBehaviour {
 
 
 	static public void RegisterListener(i_PlotFlag SPL){
-		SP_Listener.Add (SPL);
+		PF_Listener.Add (SPL);
 	}
 
 	static public void SetPlotFlag(string _key, bool _isAdd){
 		if (_isAdd) {
 			if (!PlotFlags.Contains (_key))
 				PlotFlags.Add (_key);
-			foreach (i_PlotFlag SPL in SP_Listener)
-				SPL.FlagAdd (_key);
+			foreach (i_PlotFlag PFL in PF_Listener)
+				PFL.FlagAdd (_key);
 		} else {
 			if (PlotFlags.Contains (_key))
 				PlotFlags.Remove (_key);
-			foreach (i_PlotFlag SPL in SP_Listener)
-				SPL.FlagRemove (_key);
+			foreach (i_PlotFlag PFL in PF_Listener)
+				PFL.FlagRemove (_key);
 		}
 	}
 
-	static public bool ContainsSP(string _key){
+	static public bool ContainsPF(string _key){
 		return PlotFlags.Contains (_key);
 	}
 

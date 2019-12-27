@@ -195,7 +195,24 @@ public class Node {
 
 	public string GetNextNodeName(){
 		//無下一條連結或多於一條連結，則回傳END
-		return NextLink.Count == 1 ? NextLink [0].nodeB.nodeName : "END";
+		string nextName;
+		if(NextLink.Count == 1){
+			switch (NextLink [0].nodeB.GetType ().ToString()) {
+			case "DialogueNode":
+				DialogueNode dn = (DialogueNode)NextLink [0].nodeB;
+				nextName = dn.myCharacter.name + ":" + dn.nodeName;
+				break;
+			case "QuestionNode":
+				QuestionNode qn = (QuestionNode)NextLink [0].nodeB;
+				nextName = qn.myCharacter.name + ":" + qn.nodeName;
+				break;
+			default:
+				nextName = NextLink [0].nodeB.nodeName;
+				break;
+			}
+		}else
+			nextName = "END";
+		return nextName;
 	}
 #endregion
 }
@@ -349,9 +366,7 @@ public class DivergeNode : Node{
 }
 
 public class SubNode : Node{
-	//public Option myOption = null;
 	public string myOption = "";
-	//public DivergeUnit myDiverge = null;
 	public List<ConditionUnit> myDiverge = new List<ConditionUnit>();
 
 	public string[] conditionType = new string[]{ "劇情", "回答" };
@@ -437,32 +452,23 @@ public class NodeLink{
 		Vector2 tan0, tan1;
 		int LinkType = 0;	//	0:A左B右		1:A右B左		2:A上B下		3:A下B上
 
+		float min_dy = 0.5f * (nodeA.rect.height + nodeB.rect.height) + 15;
+		float min_dx = 0.5f * (nodeA.rect.width + nodeB.rect.width) + 15;
+
 		//判別方向
-		if (Mathf.Abs (pointA.y - pointB.y) < 70) {
+		if (Mathf.Abs (pointA.y - pointB.y) < min_dy) {
 		//水平分支
-			if (Mathf.Abs (pointA.x - pointB.x) < 158){
-				bool right = pointA.x < pointB.x;
-				bool down = pointA.y < pointB.y;
-				pointA.x = right ? nodeA.canvasRect.xMax : nodeA.canvasRect.xMin;
-				pointB.y = down ? nodeB.canvasRect.yMin : nodeB.canvasRect.yMax;
-				LinkType = down ? 2 : 3;
-				tan0 = new Vector2(right? pointB.x+8 : pointB.x-8, pointA.y);
-				tan1 = new Vector2(pointB.x, down? pointA.y-8 : pointA.y+8);
-				rectEdit.position = new Vector2(pointB.x, pointA.y) - (0.5f * editSize);
-				Handles.DrawBezier (pointA, pointB, tan0, tan1, arrowColors [LinkType % 2], null, 2f);
-				if(editable){
-					GUI.DrawTexture (new Rect (pointB - (6f * LinkDirect [LinkType]) - (0.5f * arrowSize), arrowSize), tex_arrows [LinkType]);
-					GUI.DrawTexture (rectEdit, tex_edits [LinkType % 2]);
-				}
+			if (Mathf.Abs (pointA.x - pointB.x) < min_dx){
+				DrawShortLink();
 				return;
 			}
 			if (pointA.x < pointB.x) {
-				pointA.x = nodeA.canvasRect.xMax;
+				pointA.x = nodeA.canvasRect.xMax-3;
 				pointB.x = nodeB.canvasRect.xMin;
 				pointC = new Vector2 (Mathf.Clamp (pointB.x - 60f, pointA.x, 99999), pointA.y);
 				LinkType = 0;
 			} else {
-				pointA.x = nodeA.canvasRect.xMin;
+				pointA.x = nodeA.canvasRect.xMin+3;
 				pointB.x = nodeB.canvasRect.xMax;
 				pointC = new Vector2 (Mathf.Clamp (pointB.x + 60f, -99999, pointA.x), pointA.y);
 				LinkType = 1;
@@ -471,12 +477,12 @@ public class NodeLink{
 		} else {
 		//垂直分支
 			if (pointA.y < pointB.y) {
-				pointA.y = nodeA.canvasRect.yMax;
+				pointA.y = nodeA.canvasRect.yMax-3;
 				pointB.y = nodeB.canvasRect.yMin;
 				pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y - 80f, pointA.y, 99999));
 				LinkType = 2;
 			} else {
-				pointA.y = nodeA.canvasRect.yMin;
+				pointA.y = nodeA.canvasRect.yMin+3;
 				pointB.y = nodeB.canvasRect.yMax;
 				pointC = new Vector2 (pointA.x, Mathf.Clamp (pointB.y + 80f, -99999, pointA.y));
 				LinkType = 3;
@@ -493,6 +499,62 @@ public class NodeLink{
 			Handles.DrawBezier (pointA, pointC, pointA, pointC, arrowColors [LinkType % 2], null, 2f);
 		Handles.DrawBezier (pointC, pointB, tan0, tan1, arrowColors [LinkType % 2], null, 2f);
 		if (editable) {
+			GUI.DrawTexture (new Rect (pointB - (6f * LinkDirect [LinkType]) - (0.5f * arrowSize), arrowSize), tex_arrows [LinkType]);
+			GUI.DrawTexture (rectEdit, tex_edits [LinkType % 2]);
+		}
+	}
+
+	void DrawShortLink(){
+		Vector2 pointA = nodeA.canvasRect.center;
+		Vector2 pointB = nodeB.canvasRect.center;
+		bool A_Bigger = nodeA.rect.width > nodeB.rect.width;
+		float min_dx = A_Bigger ? 0.5f * nodeB.rect.width + 5 : 0.5f * nodeA.rect.width + 5;
+		float min_dy = A_Bigger ? 0.5f * nodeB.rect.height + 5 : 0.5f * nodeA.rect.height + 5;
+		Vector2 distance = pointA - pointB;
+		if (Mathf.Abs (distance.x) < min_dx || Mathf.Abs (distance.y) < min_dy) {
+			if (nodeB.canvasRect.xMin > nodeA.canvasRect.xMax) {
+				pointA.x = nodeA.canvasRect.xMax - 3;
+				pointB.x = nodeB.canvasRect.xMin + 3;
+			} else if (nodeB.canvasRect.xMax < nodeA.canvasRect.xMin) {
+				pointA.x = nodeA.canvasRect.xMin + 3;
+				pointB.x = nodeB.canvasRect.xMax - 3;
+			} else if (nodeB.canvasRect.yMin > nodeA.canvasRect.yMax) {
+				pointA.y = nodeA.canvasRect.yMax - 3;
+				pointB.y = nodeB.canvasRect.yMin + 3;
+			} else if (nodeB.canvasRect.yMax < nodeA.canvasRect.yMin) {
+				pointA.y = nodeA.canvasRect.yMin + 3;
+				pointB.y = nodeB.canvasRect.yMax - 3;
+			} else
+				return;
+			Handles.DrawBezier (pointA, pointB, pointA, pointB, arrowColors [0], null, 2f);
+			return;
+		}
+			
+
+		Vector2 tan0, tan1;
+		int LinkType = 0;		//	0:A左B右		1:A右B左		2:A上B下		3:A下B上
+		bool right = pointA.x < pointB.x;
+		bool down = pointA.y < pointB.y;
+
+		if (A_Bigger) {
+			pointA.y = down ? nodeA.canvasRect.yMax - 3 : nodeA.canvasRect.yMin + 3;
+			pointB.x = right ? nodeB.canvasRect.xMin : nodeB.canvasRect.xMax;
+			LinkType = right ? 0 : 1;		//right:left
+			tan0 = new Vector2 (pointA.x, down ? pointB.y + 8 : pointB.y - 8);
+			tan1 = new Vector2 (right ? pointA.x - 8 : pointA.x + 8, pointB.y);
+			rectEdit.position = new Vector2(pointA.x, pointB.y) - (0.5f * editSize);
+		} else {
+			pointA.x = right ? nodeA.canvasRect.xMax - 3 : nodeA.canvasRect.xMin + 3;
+			pointB.y = down ? nodeB.canvasRect.yMin : nodeB.canvasRect.yMax;
+			LinkType = down ? 2 : 3;		//down:up
+			tan0 = new Vector2 (right ? pointB.x + 8 : pointB.x - 8, pointA.y);
+			tan1 = new Vector2 (pointB.x, down ? pointA.y - 8 : pointA.y + 8);
+			rectEdit.position = new Vector2(pointB.x, pointA.y) - (0.5f * editSize);
+		}
+
+		Handles.DrawBezier (pointA, pointB, tan0, tan1, arrowColors [LinkType % 2], null, 2f);
+
+		if(editable){
 			GUI.DrawTexture (new Rect (pointB - (6f * LinkDirect [LinkType]) - (0.5f * arrowSize), arrowSize), tex_arrows [LinkType]);
 			GUI.DrawTexture (rectEdit, tex_edits [LinkType % 2]);
 		}
