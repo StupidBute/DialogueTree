@@ -242,7 +242,10 @@ public class DialogueTree : EditorWindow {
 		_n.DeleteAllConnect ();
 		if (_n.GetType () == typeof(StartNode))
 			plotNodeCount--;
-		lst_node.Remove (_n);
+		if (_n.GetType () == typeof(QuestionNode))
+			RemoveQuestion (_n);
+		else
+			lst_node.Remove (_n);
 		rightPanel.SetQNodeList ();
 		ResetSelect ();
 	}
@@ -404,6 +407,41 @@ public class DialogueTree : EditorWindow {
 		if (!colorWindow.HitTest (mousePos)) {
 			nowState = WindowState.normal;
 		}
+	}
+
+	public void RemoveChar(Character c){
+		foreach (Node n in lst_node) {
+			switch (n.GetType ().ToString ()) {
+			case "DialogueNode":
+				DialogueNode dn = (DialogueNode)n;
+				if (dn.myCharacter == c)
+					dn.myCharacter = lst_chars [0];
+				break;
+			case "QuestionNode":
+				QuestionNode qn = (QuestionNode)n;
+				if (qn.myCharacter == c)
+					qn.myCharacter = lst_chars [0];
+				break;
+			default:
+				break;
+			}
+		}
+		lst_chars.Remove (c);
+	}
+
+	public void RemoveQuestion(Node qn){
+		foreach (Node n in lst_node) {
+			if (n.GetType () == typeof(DivergeNode)) {
+				DivergeNode dn = (DivergeNode)n;
+				foreach (SubNode diver in dn.diverges) {
+					foreach (ConditionUnit c in diver.myDiverge) {
+						if (c.myQuestion == qn)
+							c.myQuestion = null;
+					}
+				}
+			}
+		}
+		lst_node.Remove (qn);
 	}
 #endregion
 }

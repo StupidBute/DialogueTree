@@ -398,8 +398,12 @@ public class SubNode : Node{
 	public void Draw(Vector2 coordinate, int index){
 		if (myOption != "")
 			nodeName = "選項" + index.ToString () + "\n" + myOption;
-		else
+		else {
+			foreach (ConditionUnit c in myDiverge)
+				c.UpdateQuestion ();
 			nodeName = "分歧" + index.ToString () + "\n" + myDiverge [0].condition;
+		}
+			
 		base.DrawSelf (coordinate);
 	}
 }
@@ -575,13 +579,10 @@ public class ConditionUnit{
 		condition = _con;
 	}
 
-	public void UpdateQuestion(QuestionNode qn){
-		myQuestion = qn;
-		UpdateQuestion ();
-	}
-
 	public void UpdateQuestion(){
 		string[] conditionSplit = condition.Split (splitter);
+		if (conditionSplit [0] == "Plot" || conditionSplit [0] == "Else")
+			return;
 		string newNodeName = myQuestion == null ? "N/A" : myQuestion.nodeName;
 		condition = newNodeName + "(" + conditionSplit [1] + ")";
 	}
@@ -653,7 +654,7 @@ public class LeftPanel{
 	void DeleteChar(){
 		Character c = selectedChar;
 		ResetSelected ();
-		DTGod.lst_chars.Remove (c);
+		DTGod.RemoveChar (c);
 		DTGod.rightPanel.SetNameArray ();
 	}
 
@@ -1202,7 +1203,7 @@ public class RightPanel{
 				string nowQNodeStr = "";
 				if(nowQNode == null){
 					nowQNodeStr = "N/A";
-					nowCondition.UpdateQuestion(null);
+					nowCondition.myQuestion = null;
 				}else
 					nowQNodeStr = nowQNode.nodeName;
 				nowCondition.condition = nowQNodeStr + "(" + keyNumber + ")";	
@@ -1227,7 +1228,7 @@ public class RightPanel{
 		} else {
 			foreach (Node n in foundNode) {
 				QuestionNode qn = (QuestionNode)n;
-				menu.AddItem (new GUIContent (qn.nodeName), false, () => unit.UpdateQuestion (qn));
+				menu.AddItem (new GUIContent (qn.nodeName), false, () => unit.myQuestion = qn);
 			}
 		}
 		menu.ShowAsContext ();
