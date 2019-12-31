@@ -4,7 +4,7 @@ using UnityEngine;
 using DG.Tweening;
 
 public class sc_AreaBlack : MonoBehaviour, i_AreaListener {
-	const float originAlpha = 0.99f;
+	const float originAlpha = 0.9f;
 	const float fadeTime = 0.5f;
 	[SerializeField]
 	string AreaCode = "A";

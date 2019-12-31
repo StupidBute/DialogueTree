@@ -14,7 +14,7 @@ public class sc_level0God : sc_God, i_PlotFlag, i_AreaListener {
 		PlotFlags.Clear ();
 		sc_God.RegisterListener (this);
 		sc_Area.RegisterListener (this);
-		StartCoroutine (WaitTalk ());
+		//StartCoroutine (WaitTalk ());
 		//ChangeStoryState(State.李哥N1N9);
 		//Kai.StartTalkNpcSequence(new string[]{"Wait(0.1)", "Move(X0.5Y0)"});
 		//Lee.StartTalkNpcSequence(new string[]{"Wait(5)", "Talk"});

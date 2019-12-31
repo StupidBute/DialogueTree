@@ -42,7 +42,8 @@ public class sc_DialogGod : MonoBehaviour {
 
 	#region 讀入與儲存對話文件
 	void ReadStoryAsset(){
-		
+		if (story == null)
+			return;
 		foreach (StartNodeInfo info in story.lst_startNodeInfo)
 			Plot.Add (info.name, info.nextKey);
 		foreach (DialogueNodeInfo info in story.lst_dialogueNodeInfo)

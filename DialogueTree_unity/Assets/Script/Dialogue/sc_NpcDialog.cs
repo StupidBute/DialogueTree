@@ -294,7 +294,8 @@ public class sc_NpcDialog : MonoBehaviour {
 	}
 
 	void DoCommand(string _command){
-		if (_command == "X" || _command == "REST")
+		_command = _command.Replace (" ", "");
+		if (_command == "" || _command == "X" || _command == "REST")
 			return;
 		string[] criticalStr = _command.Split (new char[]{ ';' });
 		char[] keySplitter = new char[]{ ':' };

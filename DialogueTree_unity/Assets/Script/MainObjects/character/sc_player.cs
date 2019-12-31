@@ -29,23 +29,12 @@ public class sc_player : sc_character {
 	public void DoInteractable(){
 		RaycastHit hit;
 		if (Physics.Raycast (transform.position, Vector3.up, out hit, 2f, mask_Interactable)) {
-			/*
-			if (hit.collider.tag == "Tag_Elevator") {
-				if (hit.transform.childCount != 0)
-					hit.collider.GetComponent<sc_EleDoor> ().PlayerGetInElevator (true, this);
-				else
-					hit.transform.parent.gameObject.GetComponent<sc_EleDoor> ().PressButton (-1, true, true);
-			} else if (hit.collider.tag == "Tag_RoomDoor") {
-				hit.collider.GetComponentInParent<sc_BuildingLayer> ().EnterRoom (this);
-			} else {
-				i_Interactable _hitIterface;
-				_hitIterface = hit.collider.GetComponent<i_Interactable> ();
-				if (_hitIterface != null)
-					_hitIterface.Interacted ();
-				else
-					hit.collider.GetComponent<sc_Interactable> ().StartInteractable ();
-			}*/
-			print ("interact something");
+			i_Interactable _hitIterface;
+			_hitIterface = hit.collider.GetComponent<i_Interactable> ();
+			if (_hitIterface != null)
+				_hitIterface.Interacted ();
+			else
+				hit.collider.GetComponent<sc_Interactable> ().StartInteractable ();
 		}
 	}
 

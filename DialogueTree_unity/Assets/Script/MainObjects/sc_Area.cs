@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public interface i_AreaListener{
 	void ChangeArea (string _nowArea);
 }
@@ -60,8 +61,7 @@ public class sc_Area : MonoBehaviour {
 	IEnumerator CheckPlayerInArea(){
 		if (AreaCode != NowArea) {
 			if (playerTR.position.x > myBorder [2] && playerTR.position.x < myBorder [3]
-				&& playerTR.position.y < myBorder [0] && playerTR.position.y > myBorder [1]
-				&& Mathf.Abs(playerTR.position.z - transform.position.z) < 1f) {
+				&& playerTR.position.y < myBorder [0] && playerTR.position.y > myBorder [1]){
 				NowArea = AreaCode;
 				AI.camLeftX = myBorder [4];
 				AI.camRightX = myBorder [5];
