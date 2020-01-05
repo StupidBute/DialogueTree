@@ -1,0 +1,691 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79b55de5385f4374382fa61288862de1, type: 3}
+  m_Name: DemoStory
+  m_EditorClassIdentifier: 
+  lst_charInfo:
+  - name: N/A
+    colorIndex: 7
+  - name: "\u674E\u5F97\u52DD"
+    colorIndex: 2
+  - name: "\u8449\u52DD\u51F1"
+    colorIndex: 0
+  lst_startNodeInfo:
+  - name: "\u958B\u5834"
+    myPos: {x: 337, y: -26}
+    nextKey: "\u674E\u5F97\u52DD:\u4EA4\u4EE3\u72C0\u6CC1"
+  - name: "29f\u78B0\u9762"
+    myPos: {x: 1077, y: -26}
+    nextKey: "\u5075\u6E2C\u5668\u8655\u7406\u5206\u6B67"
+  - name: "\u627E\u968A\u9577\u8AAA\u8A71"
+    myPos: {x: 597, y: -26}
+    nextKey: "\u9032\u5165B\u68DF\u8207\u5426\u5206\u6B67"
+  lst_dialogueNodeInfo:
+  - name: "\u674E\u5F97\u52DD:\u4EA4\u4EE3\u72C0\u6CC1"
+    myPos: {x: 327, y: 68}
+    charName: "\u674E\u5F97\u52DD"
+    myDialSet:
+      dialogs:
+      - text: "\u4F60\u4F86\u5566..."
+        animKey: Mid2Left
+        size: 14
+        command: 
+      - text: "\u62B1\u6B49\u4F11\u606F\u6642\u9593\u9084\u628A\u4F60\u53EB\u904E\u4F86\uFF0C\u4E0D\u904E\u51FA\u4E86\u9EDE\u72C0\u6CC1\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u5011\u767C\u73FEB\u68DF28\u6A13\u7684\u5075\u6E2C\u5668\u90FD\u5728\u4E09\u5341\u5206\u9418\u524D\u65B7\u4E86\u8A0A\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u9023\u5E36\u5730\u4E5F\u5F71\u97FF\u5230\u4E86\u4E00\u4E9B\u4FDD\u5168\u7CFB\u7D71\u7684\u904B\u4F5C\u3002"
+        animKey: Left2Mid
+        size: 12
+        command: 
+      - text: "\u96D6\u7136\u53EF\u80FD\u53EA\u662F\u55AE\u7D14\u7684\u7DDA\u8DEF\u904E\u71B1\u71D2\u65B7\u4E86\uFF0C\u8001\u6A5F\u578B\u90FD\u6709\u9019\u7A2E\u554F\u984C\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4F46\u4E5F\u4E0D\u80FD\u6392\u9664\u6709\u4EBA\u523B\u610F\u7834\u58DE\u95D6\u5165\uFF0C\u7562\u7ADF\u524D\u5E7E\u5929\u624D\u6AA2\u4FEE\u904E..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u5148\u8B93\u963F\u51F1\u53BB\u6AA2\u67E5\u72C0\u6CC1\u4E86\uFF0C\u7B49\u7B49\u4ED6\u56DE\u4F86\u770B\u4ED6\u600E\u9EBC\u8AAA\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u56DE\u5831\u5DE1\u908F\u7D50\u679C"
+  - name: "\u8449\u52DD\u51F1:\u56DE\u5831\u5DE1\u908F\u7D50\u679C"
+    myPos: {x: 327, y: 168}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u767B\u6123\uFF01\u6211\u6B63\u597D\u56DE\u4F86\u5462\uFF01"
+        animKey: 
+        size: 16
+        command: "Anim(\u674E\u5F97\u52DD,Mid2Right)"
+      - text: "\u968A\u9577\uFF0C\u6211\u770B\u904E\u4E86\uFF0C\u5075\u6E2C\u5668\u7684\u71C8\u865F\u90FD\u4ED6\u5ABD\u9583\u500B\u6C92\u5B8C..."
+        animKey: FoldArm
+        size: 14
+        command: 
+      - text: "\u9019\u7A2E\u6A5F\u578B\u6211\u6C92\u78B0\u904E\uFF0C\u61F6\u5F97\u6162\u6162\u7814\u7A76\uFF0C\u5C31\u5148\u56DE\u4F86\u5831\u544A\u5566\uFF01"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4E0D\u904E\u6709\u5FC5\u8981\u628A\u5B78\u9577\u53EB\u4F86\u55CE\uFF1F\u6211\u770B\u968A\u9577\u4F60\u60F3\u592A\u591A\u4E86\u5427\uFF01"
+        animKey: FoldArmNod
+        size: 14
+        command: 
+      - text: "\u54EA\u6709\u4EBA\u6703\u60F3\u95D6\u9032\u9019\u7A2E\u7834\u5730\u65B9\u554A\uFF1F"
+        animKey: FoldArmReturn
+        size: 14
+        command: 
+      nextKey: "\u674E\u5F97\u52DD:\u6307\u6D3E\u4EFB\u52D9"
+  - name: "\u8449\u52DD\u51F1:\u6C92\u554F\u984C\u7684\u5566\uFF01"
+    myPos: {x: 247, y: 748}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u5509\u5440\uFF01\u6211\u6C92\u554F\u984C\u7684\u5566\uFF01"
+        animKey: 2Excited
+        size: 14
+        command: "Anim(\u674E\u5F97\u52DD,Left2Right)"
+      - text: "\u968A\u9577\u64D4\u5FC3\u904E\u982D\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u8D70\u5427\uFF01"
+  - name: "\u674E\u5F97\u52DD:\u6C92\u554F\u984C\uFF0C\u4EA4\u4EE3\u4EFB\u52D9"
+    myPos: {x: 167, y: 588}
+    charName: "\u674E\u5F97\u52DD"
+    myDialSet:
+      dialogs:
+      - text: "\u5F88\u597D\uFF01\u90A3\u4E8B\u60C5\u5C31\u90FD\u4EA4\u7D66\u4F60\u4E86\u3002"
+        animKey: Left2Slap
+        size: 16
+        command: 
+      - text: "\u4F60\u548C\u963F\u51F1\u901F\u901F\u628A\u72C0\u6CC1\u8655\u7406\u5B8C\uFF0C\u6211\u5011\u4ECA\u5929\u5C31\u53EF\u4EE5\u7D50\u675F\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5E0C\u671B\u4E00\u5207\u90FD\u53EA\u662F\u6211\u60F3\u592A\u591A..."
+        animKey: Slap2Left
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u6C92\u554F\u984C\u7684\u5566\uFF01"
+  - name: "\u674E\u5F97\u52DD:\u548C\u7E3D\u90E8\u4FDD\u6301\u806F\u7D61"
+    myPos: {x: 487, y: 588}
+    charName: "\u674E\u5F97\u52DD"
+    myDialSet:
+      dialogs:
+      - text: "\u7684\u78BA\u6709\u4E00\u5B9A\u98A8\u96AA\uFF0C\u4F46\u6211\u5011\u5C31\u662F\u505A\u9019\u884C\u7684..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u6703\u96A8\u6642\u548C\u7E3D\u90E8\u4FDD\u6301\u806F\u7D61\uFF0C\u771F\u7684\u51FA\u72C0\u6CC1\u4E86\u4E5F\u8981\u5F97\u5230\u652F\u63F4\u3002"
+        animKey: Left2Mid
+        size: 14
+        command: 
+      - text: "\u6240\u4EE5\u4F60\u4E5F\u4E0D\u8981\u9867\u616E\u592A\u591A\uFF0C\u5C31\u7D66\u963F\u51F1\u5C55\u73FE\u4E00\u4E0B\u5B78\u9577\u98A8\u7BC4\u5427\uFF01"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4EA4\u7D66\u4F60\u4E86\uFF01"
+        animKey: 
+        size: 16
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u64D4\u5FC3\u904E\u982D\u4E86"
+  - name: "\u674E\u5F97\u52DD:\u53EE\u56D1"
+    myPos: {x: 327, y: 588}
+    charName: "\u674E\u5F97\u52DD"
+    myDialSet:
+      dialogs:
+      - text: "...\u90A3\u5C31\u597D\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u58EB\u5091\uFF0C\u4F60\u4E5F\u5225\u592A\u653E\u9B06\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4FDD\u6301\u8B66\u6212\uFF0C\u7D66\u963F\u51F1\u500B\u597D\u699C\u6A23\u5427\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u6C92\u554F\u984C\u7684\u5566\uFF01"
+  - name: "\u8449\u52DD\u51F1:\u5075\u6E2C\u5668\u5168\u8655\u7406\u5B8C\u7562"
+    myPos: {x: 1327, y: 268}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u5594\u5594\uFF01\u5B78\u9577\u4F60\u4F86\u5566\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u6B63\u8A66\u8457\u5F9E\u9019\u908A\u7684\u63A7\u5236\u9762\u677F\u8655\u7406\u914D\u96FB\u554F\u984C\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u53D7\u5F71\u97FF\u7684\u7CFB\u7D71\u90FD\u91CD\u65B0\u4E0A\u7DDA\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u90FD\u662F\u591A\u8667\u5B78\u9577\u8655\u7406\u597D\u4E86\u90A3\u4E9B\u68D8\u624B\u7684\u7834\u6A5F\u5668\u5427\uFF01\u54C8\u54C8\uFF01"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u4EFB\u52D9\u5B8C\u6210"
+  - name: "\u674E\u5F97\u52DD:\u6307\u6D3E\u4EFB\u52D9"
+    myPos: {x: 327, y: 268}
+    charName: "\u674E\u5F97\u52DD"
+    myDialSet:
+      dialogs:
+      - text: "\u8449\u52DD\u51F1\u968A\u54E1..."
+        animKey: 
+        size: 14
+        command: BoxSide(Left)
+      - text: "\u9019\u4EF6\u4E8B\u53EF\u80FD\u5F88\u56B4\u91CD\uFF0C\u9084\u7D66\u6211\u7528\u9019\u7A2E\u614B\u5EA6..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4F60\u76AE\u7D66\u6211\u7E43\u7DCA\u9EDE\uFF01"
+        animKey: Right2Slap
+        size: 20
+        command: 
+      - text: "\u5509...\u6211\u5BE6\u5728\u4E0D\u653E\u5FC3\u4F60\u9019\u5C0F\u5B50\u3002"
+        animKey: Slap2Right
+        size: 14
+        command: 
+      - text: "\u4E0D\u904E\u6211\u9084\u5F97\u7559\u5728A\u68DF\u9019\u4E00\u5074\uFF0C\u9019\u908A\u7684\u8B66\u5099\u4E5F\u8981\u6709\u4EBA\u63A5\u61C9\u624D\u884C\u3002"
+        animKey: 
+        size: 12
+        command: 
+      - text: "\u6240\u4EE5B\u68DF\u90A3\u908A\u5C31\u9EBB\u7169\u4F60\u5011\u5006\u53BB\u8655\u7406\u72C0\u6CC1\u3002"
+        animKey: 
+        size: 12
+        command: 
+      nextKey: "\u674E\u5F97\u52DD:\u5E6B\u6211\u9867\u8457\u4ED6"
+  - name: "\u8449\u52DD\u51F1:\u6C92\u78B0\u5075\u6E2C\u5668(\u8CEA\u7591)"
+    myPos: {x: 827, y: 268}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u54A6\uFF1F\u5B78\u9577\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u9019\u9EBC\u5FEB\u5C31\u904E\u4F86\u4E86\uFF1F\u5075\u6E2C\u5668\u90FD\u8655\u7406\u597D\u4E86\u55CE\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u6B63\u8A66\u8457\u5F9E\u9019\u908A\u7684\u63A7\u5236\u9762\u677F\u8655\u7406\u914D\u96FB\u554F\u984C..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4E0D\u904E\u4E0D\u77E5\u9053\u70BA\u4EC0\u9EBC\uFF0C28\u6A13\u7684\u914D\u96FB\u72C0\u6CC1\u9084\u662F\u4E00\u6A23\u6DF7\u4E82..."
+        animKey: 
+        size: 14
+        command: 
+      - text: '...'
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5B78\u9577...\u4F60\u8A72\u4E0D\u6703\u534A\u53F0\u5075\u6E2C\u5668\u90FD\u6C92\u8655\u7406\u5427\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5582\u5582\u5582\uFF01\u9019\u53EF\u4E0D\u50CF\u5B78\u9577\u554A\uFF01"
+        animKey: 
+        size: 20
+        command: 
+      - text: "\u96E3\u9053\u4F60\u9084\u5728\u64D4\u5FC3\u968A\u9577\u7684\u4FB5\u5165\u8005\u5047\u8AAA\uFF1F"
+        animKey: 
+        size: 16
+        command: 
+      - text: "\u6211\u80FD\u7406\u89E3\u662F\u6709\u9019\u7A2E\u53EF\u80FD\u6027\uFF0C\u4F46\u4E5F\u4E0D\u81F3\u65BC\u614C\u6210\u9019\u6A23\u5427..."
+        animKey: 
+        size: 16
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u5230\u5E95\u5E79\u4EC0\u9EBC\u53BB\u4E86?"
+  - name: "\u8449\u52DD\u51F1:\u6C92\u78B0\u5075\u6E2C\u5668(\u4E00\u822C)"
+    myPos: {x: 987, y: 268}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u54A6\uFF1F\u5B78\u9577\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u9019\u9EBC\u5FEB\u5C31\u56DE\u4F86\u4E86\u55CE\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u6B63\u8A66\u8457\u5F9E\u9019\u908A\u7684\u63A7\u5236\u9762\u677F\u8655\u7406\u914D\u96FB\u554F\u984C..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4E0D\u904E\u4E0D\u77E5\u9053\u70BA\u4EC0\u9EBC\uFF0C28\u6A13\u7684\u914D\u96FB\u72C0\u6CC1\u9084\u662F\u4E00\u6A23\u6DF7\u4E82..."
+        animKey: 
+        size: 14
+        command: 
+      - text: '...'
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5B78\u9577...\u4F60\u8A72\u4E0D\u6703\u534A\u53F0\u5075\u6E2C\u5668\u90FD\u6C92\u8655\u7406\u5427\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u5230\u5E95\u5E79\u4EC0\u9EBC\u53BB\u4E86?"
+  - name: "\u8449\u52DD\u51F1:\u6C92\u6709\u5168\u8655\u7406\u5B8C\u7562"
+    myPos: {x: 1147, y: 268}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u5594\u5594\uFF01\u5B78\u9577\u4F60\u4F86\u5566\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u6B63\u8A66\u8457\u5F9E\u9019\u908A\u7684\u63A7\u5236\u9762\u677F\u8655\u7406\u914D\u96FB\u554F\u984C\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u770B\u8D77\u4F86\u5DF2\u7D93\u6210\u529F\u8B93\u5E7E\u500B\u53D7\u5F71\u97FF\u7684\u7CFB\u7D71\u91CD\u65B0\u4E0A\u7DDA\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u8A62\u554F\u57F7\u884C\u72C0\u6CC1"
+  - name: "\u8449\u52DD\u51F1:\u76E1\u5FEB\u627E\u968A\u9577\u56DE\u5831"
+    myPos: {x: 927, y: 748}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u9019\u6A23\u554A..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u73FE\u5728\u72C0\u6CC1\u7684\u78BA\u6709\u9EDE\u8D85\u51FA\u9810\u671F\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u65E2\u7136\u5B78\u9577\u4E5F\u627E\u4E0D\u51FA\u539F\u56E0\uFF0C\u90A3\u6211\u5011\u61C9\u8A72\u76E1\u5FEB\u8DDF\u968A\u9577\u56DE\u5831\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u8D70\u5427\uFF01"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: END
+  - name: "\u8449\u52DD\u51F1:\u4E0D\u6EFF"
+    myPos: {x: 827, y: 988}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u9019..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5509...\u597D\u5427\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u73FE\u968E\u6BB5\u4E0D\u8655\u7406\u5075\u6E2C\u5668\u4E5F\u5F88\u96E3\u4FEE\u5FA9\u7570\u5E38\u72C0\u6CC1\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u5011\u4E5F\u53EA\u80FD\u5148\u8DDF\u968A\u9577\u56DE\u5831\u72C0\u6CC1\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6C92\u60F3\u5230\u5B78\u9577\u9019\u9EBC\u9760\u4E0D\u4F4F..."
+        animKey: 
+        size: 12
+        command: 
+      - text: "\u6211\u5011\u56DE\u53BB\u627E\u968A\u9577\u5427\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: END
+  - name: "\u8449\u52DD\u51F1:\u9B27\u7FFB"
+    myPos: {x: 607, y: 988}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u4EC0\u9EBC..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "...\u5509\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u4EE5\u70BA\u968A\u9577\u627E\u4F60\u904E\u4F86\u662F\u76F8\u4FE1\u4F60\u7684\u5C08\u696D\u548C\u7D93\u9A57\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u4E5F\u4E00\u76F4\u90FD\u5F88\u76F8\u4FE1\uFF0C\u5F88\u4F9D\u8CF4\u5B78\u9577\uFF01"
+        animKey: 
+        size: 16
+        command: 
+      - text: "\u6240\u4EE5\u624D\u4E00\u526F\u8F15\u8F15\u9B06\u9B06\u7684\u614B\u5EA6\uFF0C\u56E0\u70BA\u6211\u771F\u7684\u8A8D\u70BA\u6709\u5B78\u9577\u5728\u5C31\u4E0D\u662F\u554F\u984C\uFF01"
+        animKey: 
+        size: 16
+        command: 
+      - text: "\u7D50\u679C\u73FE\u5728\u662F\u600E\u6A23\uFF1F\u5BB3\u6015\u6709\u5371\u96AA\u4EBA\u7269\u95D6\u5165\u5C31\u4E0D\u5E79\u6D3B\u4E86\uFF1F\u5C31\u9B27\u813E\u6C23\u4E86\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5230\u5E95\u8AB0\u624D\u662F\u9EBB\u7169\u554A..."
+        animKey: 
+        size: 12
+        command: 
+      - text: "\u6211\u4E0B\u53BB\u627E\u968A\u9577\u56DE\u5831\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: END
+  - name: "\u8449\u52DD\u51F1:\u4EFB\u52D9\u5B8C\u6210"
+    myPos: {x: 1227, y: 908}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u4E0D\u904E..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u73FE\u5728\u9019\u500B\u72C0\u6CC1\u7684\u78BA\u6709\u9EDE\u8D85\u51FA\u9810\u671F\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6AA2\u67E5\u904E\u63A7\u5236\u9762\u677F\u5F8C\u624D\u767C\u73FE\uFF0C\u5075\u6E2C\u5668\u7570\u5E38\u6240\u9020\u6210\u7684\u5F71\u97FF\u6BD4\u60F3\u50CF\u4E2D\u5927\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u96D6\u7136\u9019\u7A2E\u7834\u6A5F\u578B\u4EE5\u5F80\u4E5F\u6642\u4E0D\u6642\u51FA\u73FE\u904E\u554F\u984C..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4F46\u5F9E\u4F86\u6C92\u6709\u4E00\u6B21\u9023\u5E36\u90A3\u9EBC\u591A\u4FDD\u5168\u7CFB\u7D71\u540C\u6642\u65B7\u7DDA\u7684\u60C5\u6CC1\u767C\u751F\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u958B\u59CB\u5BB3\u6015\u968A\u9577\u7684\u5047\u8A2D\u6210\u771F\u4E86..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5982\u679C\u73FE\u5728\u5C31\u771F\u6709\u500B\u5165\u4FB5\u8005\u5F9E\u6211\u5011\u5F8C\u9762\u51FA\u73FE\uFF0C\u9084\u62FF\u69CD\u5C0D\u8457\u6211\u5011..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u9084\u771F\u4ED6\u5ABD\u4E0D\u77E5\u9053\u8A72\u600E\u9EBC\u8FA6..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u8D70\u5427...\u6211\u5011\u8D95\u5FEB\u56DE\u53BB\u5411\u968A\u9577\u56DE\u5831\u72C0\u6CC1\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: END
+  - name: "\u8449\u52DD\u51F1:\u64D4\u5FC3\u904E\u982D\u4E86"
+    myPos: {x: 487, y: 748}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u968A\u9577\u548C\u5B78\u9577\u90FD\u64D4\u5FC3\u904E\u982D\u4E86..."
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u54EA\u6703\u6709\u4EC0\u9EBC\u4E8B\u554A\uFF01"
+        animKey: 2Excited
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u8D70\u5427\uFF01"
+  - name: "\u8449\u52DD\u51F1:\u8D70\u5427\uFF01"
+    myPos: {x: 367, y: 868}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u6211\u525B\u525B\u521D\u6B65\u6AA2\u67E5\u7684\u7D50\u679C\uFF0C\u65B7\u8A0A\u7684\u5075\u6E2C\u5668\u53EF\u80FD\u6709\u7570\u5E38\u653E\u96FB\u7684\u72C0\u6CC1\u3002"
+        animKey: ExcitedReturn
+        size: 14
+        command: 
+      - text: "\u5B78\u9577\u61C9\u8A72\u5C0D\u9019\u7A2E\u6A5F\u578B\u6BD4\u8F03\u719F\u6089\uFF0C\u4FEE\u5FA9\u5DE5\u4F5C\u5C31\u4EA4\u7D66\u4F60\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u6211\u76F4\u63A5\u53BB\u6A13\u4E0A\u8A66\u8A66\u4E2D\u7E7C\u63A7\u5236\u9762\u677F\u80FD\u4E0D\u80FD\u9032\u884C\u8ABF\u63A7\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u8D70\u5427\uFF01"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: END
+  - name: "\u674E\u5F97\u52DD:\u627E\u963F\u51F1\u56DE\u4F86"
+    myPos: {x: 507, y: 268}
+    charName: "\u674E\u5F97\u52DD"
+    myDialSet:
+      dialogs:
+      - text: "\u8655\u7406\u5B8C\u4E86\u55CE\uFF1F"
+        animKey: 
+        size: 14
+        command: Face(Player)
+      - text: "\u53BB\u627E\u963F\u51F1\u56DE\u4F86\u5427\uFF0C\u6211\u4E00\u8D77\u807D\u4F60\u5011\u7684\u72C0\u6CC1\u5831\u544A\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: END
+  - name: "\u674E\u5F97\u52DD:\u5FEB\u53BB\u5427\uFF01"
+    myPos: {x: 667, y: 268}
+    charName: "\u674E\u5F97\u52DD"
+    myDialSet:
+      dialogs:
+      - text: "\u600E\u9EBC\u4E86\uFF1F"
+        animKey: 
+        size: 14
+        command: Face(Player)
+      - text: "\u9084\u662F\u611F\u5230\u4E0D\u5B89\u55CE\uFF1F"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u5C31\u7167\u5E73\u5E38\u5DE5\u4F5C\u4E00\u6A23\uFF0C\u597D\u597D\u5E79\u5C31\u662F\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u771F\u7684\u51FA\u4E8B\u6211\u6703\u7F69\u8457\u4F60\u5011\u7684\uFF0C\u597D\u55CE?"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u4E0D\u7528\u904E\u5EA6\u64D4\u5FC3\uFF0C\u53BB\u5427\uFF01"
+        animKey: 
+        size: 16
+        command: 
+      nextKey: END
+  - name: "\u8449\u52DD\u51F1:\u77AD\u89E3\u72C0\u6CC1"
+    myPos: {x: 1147, y: 748}
+    charName: "\u8449\u52DD\u51F1"
+    myDialSet:
+      dialogs:
+      - text: "\u77AD\u89E3\u3002"
+        animKey: 
+        size: 14
+        command: 
+      - text: "\u9019\u6A23\u4E00\u4F86\u4ECA\u5929\u7684\u5DE5\u4F5C\u61C9\u8A72\u53EF\u4EE5\u66AB\u6642\u544A\u500B\u6BB5\u843D\u4E86\u3002"
+        animKey: 
+        size: 14
+        command: 
+      nextKey: "\u8449\u52DD\u51F1:\u4EFB\u52D9\u5B8C\u6210"
+  lst_questionNodeInfo:
+  - name: "\u674E\u5F97\u52DD:\u5E6B\u6211\u9867\u8457\u4ED6"
+    myPos: {x: 327, y: 368}
+    charName: "\u674E\u5F97\u52DD"
+    myQuestion:
+      questionDial:
+        text: "...\u58EB\u5091\uFF0C\u4F60\u53EF\u4EE5\u5E6B\u6211\u770B\u8457\u9019\u5C0F\u5B50\u5427?"
+        animKey: Mid2Left
+        size: 14
+        command: BoxSide(Right)
+      options:
+      - text: "\u6C92\u554F\u984C\uFF01"
+        nextKey: "\u674E\u5F97\u52DD:\u6C92\u554F\u984C\uFF0C\u4EA4\u4EE3\u4EFB\u52D9"
+      - text: "\u54C8\u54C8\uFF01\u53EA\u8981\u963F\u51F1\u6C92\u7D66\u6211\u627E\u9EBB\u7169\u5C31\u597D\u3002"
+        nextKey: "\u674E\u5F97\u52DD:\u53EE\u56D1"
+      - text: "\u9019\u807D\u8D77\u4F86\u592A\u5371\u96AA\u4E86\uFF0C\u6211\u53EF\u4E0D\u6562\u4FDD\u8B49..."
+        nextKey: "\u674E\u5F97\u52DD:\u548C\u7E3D\u90E8\u4FDD\u6301\u806F\u7D61"
+      answer: 1
+    optionInfos:
+    - name: "\u9078\u98050\n\u6C92\u554F\u984C\uFF01"
+      myPos: {x: 202, y: 495}
+      myOption: "\u6C92\u554F\u984C\uFF01"
+      diverConditions: []
+    - name: "\u9078\u98051\n\u54C8\u54C8\uFF01\u53EA\u8981\u963F\u51F1\u6C92\u7D66\u6211\u627E\u9EBB\u7169\u5C31\u597D\u3002"
+      myPos: {x: 362, y: 495}
+      myOption: "\u54C8\u54C8\uFF01\u53EA\u8981\u963F\u51F1\u6C92\u7D66\u6211\u627E\u9EBB\u7169\u5C31\u597D\u3002"
+      diverConditions: []
+    - name: "\u9078\u98052\n\u9019\u807D\u8D77\u4F86\u592A\u5371\u96AA\u4E86\uFF0C\u6211\u53EF\u4E0D\u6562\u4FDD\u8B49..."
+      myPos: {x: 522, y: 495}
+      myOption: "\u9019\u807D\u8D77\u4F86\u592A\u5371\u96AA\u4E86\uFF0C\u6211\u53EF\u4E0D\u6562\u4FDD\u8B49..."
+      diverConditions: []
+  - name: "\u8449\u52DD\u51F1:\u8A62\u554F\u57F7\u884C\u72C0\u6CC1"
+    myPos: {x: 1147, y: 448}
+    charName: "\u8449\u52DD\u51F1"
+    myQuestion:
+      questionDial:
+        text: "\u90A3\u9EBC\u5075\u6E2C\u5668\u7684\u72C0\u6CC1\u5982\u4F55\uFF1F\u7684\u78BA\u662F\u7570\u5E38\u653E\u96FB\u7684\u554F\u984C\u55CE?"
+        animKey: 
+        size: 14
+        command: 
+      options:
+      - text: "\u5C0D\uFF0C\u6211\u66AB\u6642\u90FD\u5207\u65B7\u5B83\u5011\u7684\u4F9B\u96FB\u4E86\u3002"
+        nextKey: "\u8449\u52DD\u51F1:\u77AD\u89E3\u72C0\u6CC1"
+      - text: "\u6211\u4E0D\u592A\u78BA\u5B9A\uFF0C\u4FDD\u7559\u4E86\u5E7E\u53F0\u6C92\u52D5\u3002"
+        nextKey: "\u8449\u52DD\u51F1:\u76E1\u5FEB\u627E\u968A\u9577\u56DE\u5831"
+      answer: -1
+    optionInfos:
+    - name: "\u9078\u98050\n\u5C0D\uFF0C\u6211\u66AB\u6642\u90FD\u5207\u65B7\u5B83\u5011\u7684\u4F9B\u96FB\u4E86\u3002"
+      myPos: {x: 1182, y: 615}
+      myOption: "\u5C0D\uFF0C\u6211\u66AB\u6642\u90FD\u5207\u65B7\u5B83\u5011\u7684\u4F9B\u96FB\u4E86\u3002"
+      diverConditions: []
+    - name: "\u9078\u98051\n\u6211\u4E0D\u592A\u78BA\u5B9A\uFF0C\u4FDD\u7559\u4E86\u5E7E\u53F0\u6C92\u52D5\u3002"
+      myPos: {x: 1062, y: 615}
+      myOption: "\u6211\u4E0D\u592A\u78BA\u5B9A\uFF0C\u4FDD\u7559\u4E86\u5E7E\u53F0\u6C92\u52D5\u3002"
+      diverConditions: []
+  - name: "\u8449\u52DD\u51F1:\u5230\u5E95\u5E79\u4EC0\u9EBC\u53BB\u4E86?"
+    myPos: {x: 827, y: 448}
+    charName: "\u8449\u52DD\u51F1"
+    myQuestion:
+      questionDial:
+        text: "...\u6240\u4EE5\u4F60\u525B\u624D\u90FD\u505A\u4E86\u4EC0\u9EBC\u554A?"
+        animKey: 
+        size: 14
+        command: 
+      options:
+      - text: "\u62B1\u6B49\uFF0C\u6211\u5BE6\u5728\u4E0D\u6703\u8655\u7406\u9019\u4E9B\u73A9\u610F..."
+        nextKey: "\u8449\u52DD\u51F1:\u76E1\u5FEB\u627E\u968A\u9577\u56DE\u5831"
+      - text: "\u628A\u8868\u73FE\u6A5F\u6703\u7559\u7D66\u512A\u79C0\u7684\u5B78\u5F1F\u561B\uFF01"
+        nextKey: "\u8449\u52DD\u51F1:\u4E0D\u6EFF"
+      - text: "\u8F2A\u7684\u5230\u4F60\u4F86\u8CEA\u7591\u6211\u55CE?"
+        nextKey: "\u614B\u5EA6\u5206\u6B67"
+      answer: -1
+    optionInfos:
+    - name: "\u9078\u98050\n\u62B1\u6B49\uFF0C\u6211\u5BE6\u5728\u4E0D\u6703\u8655\u7406\u9019\u4E9B\u73A9\u610F..."
+      myPos: {x: 962, y: 615}
+      myOption: "\u62B1\u6B49\uFF0C\u6211\u5BE6\u5728\u4E0D\u6703\u8655\u7406\u9019\u4E9B\u73A9\u610F..."
+      diverConditions: []
+    - name: "\u9078\u98051\n\u628A\u8868\u73FE\u6A5F\u6703\u7559\u7D66\u512A\u79C0\u7684\u5B78\u5F1F\u561B\uFF01"
+      myPos: {x: 862, y: 615}
+      myOption: "\u628A\u8868\u73FE\u6A5F\u6703\u7559\u7D66\u512A\u79C0\u7684\u5B78\u5F1F\u561B\uFF01"
+      diverConditions: []
+    - name: "\u9078\u98052\n\u8F2A\u7684\u5230\u4F60\u4F86\u8CEA\u7591\u6211\u55CE?"
+      myPos: {x: 762, y: 615}
+      myOption: "\u8F2A\u7684\u5230\u4F60\u4F86\u8CEA\u7591\u6211\u55CE?"
+      diverConditions: []
+  lst_divergeNodeInfo:
+  - name: "\u5075\u6E2C\u5668\u8655\u7406\u5206\u6B67"
+    myPos: {x: 1082, y: 72}
+    myDiverges:
+    - conditions:
+      - Plot(DetectorOpenCount4)
+      nextKey: "\u8449\u52DD\u51F1:\u5075\u6E2C\u5668\u5168\u8655\u7406\u5B8C\u7562"
+    - conditions:
+      - Plot(DetectorOpenCount0)
+      - "\u674E\u5F97\u52DD:\u5E6B\u6211\u9867\u8457\u4ED6(1)"
+      nextKey: "\u8449\u52DD\u51F1:\u6C92\u78B0\u5075\u6E2C\u5668(\u8CEA\u7591)"
+    - conditions:
+      - Plot(DetectorOpenCount0)
+      nextKey: "\u8449\u52DD\u51F1:\u6C92\u78B0\u5075\u6E2C\u5668(\u4E00\u822C)"
+    - conditions:
+      - Else
+      nextKey: "\u8449\u52DD\u51F1:\u6C92\u6709\u5168\u8655\u7406\u5B8C\u7562"
+    diverInfos:
+    - name: "\u5206\u6B670\nPlot(DetectorOpenCount4)"
+      myPos: {x: 1362, y: 175}
+      myOption: 
+      diverConditions:
+      - Plot(DetectorOpenCount4)
+    - name: "\u5206\u6B671\nPlot(DetectorOpenCount0)"
+      myPos: {x: 862, y: 175}
+      myOption: 
+      diverConditions:
+      - Plot(DetectorOpenCount0)
+      - "\u5E6B\u6211\u9867\u8457\u4ED6(1)"
+    - name: "\u5206\u6B672\nPlot(DetectorOpenCount0)"
+      myPos: {x: 1022, y: 175}
+      myOption: 
+      diverConditions:
+      - Plot(DetectorOpenCount0)
+    - name: "\u5206\u6B673\nElse"
+      myPos: {x: 1182, y: 175}
+      myOption: 
+      diverConditions:
+      - Else
+  - name: "\u614B\u5EA6\u5206\u6B67"
+    myPos: {x: 742, y: 752}
+    myDiverges:
+    - conditions:
+      - "\u674E\u5F97\u52DD:\u5E6B\u6211\u9867\u8457\u4ED6(2)"
+      nextKey: "\u8449\u52DD\u51F1:\u9B27\u7FFB"
+    - conditions:
+      - Else
+      nextKey: "\u8449\u52DD\u51F1:\u4E0D\u6EFF"
+    diverInfos:
+    - name: "\u5206\u6B670\n\u5E6B\u6211\u9867\u8457\u4ED6(2)"
+      myPos: {x: 642, y: 855}
+      myOption: 
+      diverConditions:
+      - "\u5E6B\u6211\u9867\u8457\u4ED6(2)"
+    - name: "\u5206\u6B671\nElse"
+      myPos: {x: 762, y: 855}
+      myOption: 
+      diverConditions:
+      - Else
+  - name: "\u9032\u5165B\u68DF\u8207\u5426\u5206\u6B67"
+    myPos: {x: 602, y: 92}
+    myDiverges:
+    - conditions:
+      - Plot(AreaB)
+      nextKey: "\u674E\u5F97\u52DD:\u627E\u963F\u51F1\u56DE\u4F86"
+    - conditions:
+      - Else
+      nextKey: "\u674E\u5F97\u52DD:\u5FEB\u53BB\u5427\uFF01"
+    diverInfos:
+    - name: "\u5206\u6B670\nPlot(AreaB)"
+      myPos: {x: 542, y: 175}
+      myOption: 
+      diverConditions:
+      - Plot(AreaB)
+    - name: "\u5206\u6B671\nElse"
+      myPos: {x: 702, y: 175}
+      myOption: 
+      diverConditions:
+      - Else

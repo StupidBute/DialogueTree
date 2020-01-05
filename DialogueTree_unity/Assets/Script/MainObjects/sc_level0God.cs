@@ -6,18 +6,25 @@ using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
 public class sc_level0God : sc_God, i_PlotFlag, i_AreaListener {
-
 	[SerializeField]
 	sc_talkNPC Kai, Lee;
 
+	sc_DialogGod dialGod;
+
+	public enum State{
+		開始, 
+		指派任務, 
+		執行任務, 
+		回報任務, 
+		結束
+	};
+	static public State StoryState = State.開始;
+
 	void Start(){
-		PlotFlags.Clear ();
-		sc_God.RegisterListener (this);
+		dialGod = GetComponent<sc_DialogGod>();
+		sc_DialogGod.RegisterListener (this);
 		sc_Area.RegisterListener (this);
-		//StartCoroutine (WaitTalk ());
-		//ChangeStoryState(State.李哥N1N9);
-		//Kai.StartTalkNpcSequence(new string[]{"Wait(0.1)", "Move(X0.5Y0)"});
-		//Lee.StartTalkNpcSequence(new string[]{"Wait(5)", "Talk"});
+		StartCoroutine (WaitTalk ("開場"));
 	}
 
 	#region listener functions
@@ -69,9 +76,9 @@ public class sc_level0God : sc_God, i_PlotFlag, i_AreaListener {
 		}
   	}
 
-	IEnumerator WaitTalk(){
+	IEnumerator WaitTalk(string key){
 		yield return new WaitForSeconds (1);
-		dialGod.StartPlot ("劇情1");
+		dialGod.StartPlot (key);
 	}
 
 	IEnumerator StorySequence(){

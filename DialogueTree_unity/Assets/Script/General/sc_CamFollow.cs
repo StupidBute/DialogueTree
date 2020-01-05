@@ -6,7 +6,7 @@ using DG.Tweening;
 
 public class sc_CamFollow : MonoBehaviour {
 	const float followSpd = 2f, sizeSpd = 2.6f, AccSpd = 30f;
-	const float interactScale = 0.9f, talkCamScale = 0.75f, parkourScale = 0.9f;
+	const float interactScale = 0.9f, talkCamScale = 0.85f, parkourScale = 0.9f;
 
 	public float camSize = 4.8f;
 	[SerializeField]

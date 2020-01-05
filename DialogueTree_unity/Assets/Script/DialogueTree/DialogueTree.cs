@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 
 public class DialogueTree : EditorWindow {
-	public enum WindowState{normal, drag, popup, link, scroll};
+	public enum WindowState{normal, drag, move, popup, link, scroll};
 	public WindowState nowState = WindowState.normal;
 
 	public LeftPanel leftPanel;
@@ -121,7 +121,7 @@ public class DialogueTree : EditorWindow {
 							MainDropdown (mousePos);
 						break;
 					default:
-						nowState = WindowState.drag;
+						nowState = WindowState.move;
 						break;
 					}
 
@@ -130,11 +130,15 @@ public class DialogueTree : EditorWindow {
 			break;
 		case WindowState.drag:
 			if (e.type == EventType.MouseDrag) {
-				if (SelectNode == null)
-					coordinate += e.delta;
-				else
+				if (SelectNode != null)
 					SelectNode.FollowMouse (e.delta);
 			}else if (e.type == EventType.MouseUp)
+				nowState = WindowState.normal;
+			break;
+		case WindowState.move:
+			if (e.type == EventType.MouseDrag)
+				coordinate += e.delta;
+			else if (e.type == EventType.MouseUp)
 				nowState = WindowState.normal;
 			break;
 		case WindowState.popup:

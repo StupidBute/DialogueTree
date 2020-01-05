@@ -13,7 +13,7 @@ public class sc_NpcDialog : MonoBehaviour {
 
 	public string myName;
 	[System.NonSerialized]
-	public GameObject myGod;
+	GameObject myGod;
 	[System.NonSerialized]
 	public sc_DialogGod scGod;
 	[System.NonSerialized]
@@ -103,7 +103,7 @@ public class sc_NpcDialog : MonoBehaviour {
 			if(keyStr[0] != myName){
 				keyStr = nextnextKey.Split (splitter);	//檢查下下一句是否是自己講的，是則啟用REST狀態，否則關閉對話框
 				if(keyStr[0] == myName)
-					StartCoroutine(IE_TalkDialog(new Dialog ("idle", 12, "X", ""), false));
+					StartCoroutine(IE_TalkDialog(new Dialog ("", 12, "REST", "..."), false));
 				else
 					StartCoroutine (IE_AnimOpenDialog (animType.End, 0f, 0f, null));
 			}
@@ -116,8 +116,7 @@ public class sc_NpcDialog : MonoBehaviour {
 	#region 顯示對話
 	IEnumerator IE_TalkDialog(Dialog _dial, bool isFirst){
 		myDialog.text = "";
-		if (_dial.animKey != "X")
-			scTalk.SetTalkAnim (_dial.animKey);
+		SetTalkAnim (_dial.animKey);
 		DoCommand (_dial.command);
 		yield return StartCoroutine (TextEffect (_dial, isFirst));
 	}
@@ -179,7 +178,7 @@ public class sc_NpcDialog : MonoBehaviour {
 		#endregion
 
 		#region 跑字
-		if(sc_God.fastDial){
+		if(scGod.fastDial){
 			myDialog.text = _dial.text;
 			yield return null;
 		}else{
@@ -294,8 +293,7 @@ public class sc_NpcDialog : MonoBehaviour {
 	}
 
 	void DoCommand(string _command){
-		_command = _command.Replace (" ", "");
-		if (_command == "" || _command == "X" || _command == "REST")
+		if (_command == "" || _command == "REST")
 			return;
 		string[] criticalStr = _command.Split (new char[]{ ';' });
 		char[] keySplitter = new char[]{ ':' };
@@ -305,7 +303,7 @@ public class sc_NpcDialog : MonoBehaviour {
 			string[] functionStr = criticStr.Split (keySplitter);
 			string[] funcStr;
 			sc_NpcDialog owner;
-			if (functionStr.Length > 1) {
+			if (functionStr.Length > 1) {	//owner:funcStr
 				owner = scGod.GetNpcDialog (functionStr [0]);
 				funcStr = functionStr [1].Split (funcSplitter, System.StringSplitOptions.RemoveEmptyEntries);
 			}else{
@@ -314,7 +312,7 @@ public class sc_NpcDialog : MonoBehaviour {
 			}
 
 			switch (funcStr [0]) {
-			case "Face":
+			case "Face":	//Face(target)
 				if (funcStr.Length != 2){
 					print ("函式參數數量錯誤!(" + (funcStr.Length-1).ToString () + ") Face函式需要1個參數。\n此句你打的是: " + criticStr);
 				}else{
@@ -329,42 +327,38 @@ public class sc_NpcDialog : MonoBehaviour {
 				if (!(funcStr.Length == 2 || funcStr.Length == 3)) {
 					print ("函式參數數量錯誤!(" + (funcStr.Length-1).ToString() + ") Move函式需要1或2個參數。\n此句你打的是: " + criticStr);
 				} else {
-					if (funcStr.Length == 2) {
+					if (funcStr.Length == 2) {			//Move(X?Y?)
 						string[] vectorStr = funcStr [1].Split (vecSplitter, System.StringSplitOptions.RemoveEmptyEntries);
-						StartCoroutine (owner.scTalk.MoveToPos (new Vector2 (String2PosX (vectorStr [0]), float.Parse (vectorStr [1]))));
-					} else if(funcStr.Length == 3){
+						StartCoroutine (owner.scTalk.MoveToPos (new Vector2 (float.Parse (vectorStr [0]), float.Parse (vectorStr [1]))));
+					} else if(funcStr.Length == 3){		//Move(X?Y?,X?Y?)	teleport before moving
 						string[] vectorStr0 = funcStr [1].Split (vecSplitter, System.StringSplitOptions.RemoveEmptyEntries);
 						string[] vectorStr1 = funcStr [2].Split (vecSplitter, System.StringSplitOptions.RemoveEmptyEntries);
-						owner.transform.position = new Vector2 (String2PosX (vectorStr0 [0]), float.Parse (vectorStr0 [1]));
+						owner.transform.position = new Vector2 (float.Parse (vectorStr0 [0]), float.Parse (vectorStr0 [1]));
 						owner.scTalk.SnapFloor (1f);
-						StartCoroutine (owner.scTalk.MoveToPos (new Vector2 (String2PosX (vectorStr1 [0]), float.Parse (vectorStr1 [1]))));
+						StartCoroutine (owner.scTalk.MoveToPos (new Vector2 (float.Parse (vectorStr1 [0]), float.Parse (vectorStr1 [1]))));
 					}
 				}
 					
 				break;
-			case "BoxSide":
+			case "Anim"://Anim(target,key)
+				if (funcStr.Length != 3)
+					return;
+				scGod.GetNpcDialog (funcStr [1]).SetTalkAnim (funcStr [2]);
+				break;
+			case "BoxSide":		//BoxSide(Right) or BoxSide(Left)
 				if (funcStr [1] == "Right")
 					isRightBox = true;
 				else
 					isRightBox = false;
 				break;
+			case "Plot":		//Plot(key)
+				if (funcStr.Length != 2)
+					return;
+				sc_DialogGod.SetPlotFlag (funcStr [1], true);
+				break;
 			default:
-				sc_God.SetPlotFlag(funcStr[0], true);
 				break;
 			}
-		}
-	}
-
-	float String2PosX(string posXStr){
-		if (posXStr == "Left") {
-			return cam.ScreenToWorldPoint (new Vector2 (0, 0)).x - 0.6f;
-		} else if (posXStr == "Right") {
-			return cam.ScreenToWorldPoint (new Vector2 (Screen.width, 0)).x + 0.6f;
-		} else {
-			float num = 0;
-			if (!float.TryParse (posXStr, out num))
-				print ("Move函式的參數設定錯誤! 你打的參數是: " + posXStr);
-			return num;
 		}
 	}
 
@@ -384,11 +378,13 @@ public class sc_NpcDialog : MonoBehaviour {
 			isRightBox = false;
 		else
 			isRightBox = true;
-		if(scTalk != null)
+		if(scTalk != null && scTalk.MovableCharacter)
 			StartCoroutine (scTalk.FaceTarget (target));
 	}
 
-
+	public void SetTalkAnim(string key){
+		scTalk.SetAnim (key);
+	}
 
 	RaycastHit2D MouseClick(Vector3 _pos){
 		Ray _ray = cam.ScreenPointToRay (_pos);

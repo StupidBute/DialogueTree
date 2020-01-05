@@ -132,6 +132,7 @@ public class Node {
 	virtual public Node HitTest(Vector2 mousePos){
 		if (canvasRect.Contains (mousePos)) {
 			Selected (true);
+			EditorGUI.FocusTextInControl ("");
 			return this;
 		} else
 			return null;
@@ -1087,14 +1088,14 @@ public class RightPanel{
 		GUI.DrawTexture (new Rect (5, height, 240, 115), tex_bg);
 		height += 5;
 		GUI.Label (new Rect (10, height, 30, 18), "動作", style_label);
-		d.animKey = EditorGUI.TextField (new Rect (40, height, 100, 18), d.animKey, style_tf);
+		d.animKey = EditorGUI.TextField (new Rect (40, height, 100, 18), d.animKey, style_tf).Replace (" ", "");
 		GUI.Label (new Rect (150, height, 30, 18), "字體", style_label);
 		d.size = EditorGUI.IntField (new Rect (180, height, 60, 18), d.size, style_tf);
 		height += 25;
 		d.text = EditorGUI.TextArea (new Rect (10, height, 230, 50), d.text, style_ta);
 		height += 60;
 		GUI.Label (new Rect (10, height, 30, 18), "指令", style_label);
-		d.command = EditorGUI.TextField (new Rect (40, height, 200, 18), d.command, style_tf);
+		d.command = EditorGUI.TextField (new Rect (40, height, 200, 18), d.command, style_tf).Replace (" ", "");
 		contentRect.height += 180;
 	}
 

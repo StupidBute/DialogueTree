@@ -32,7 +32,7 @@ public class sc_character : MonoBehaviour {
 	bool isNormalState = true;
 	bool onSlope = false;
 	int originSortOrder = 0;
-	string lastAnimKey = "";
+
 	virtual protected void Start(){
 		mask_Wall = 1 << LayerMask.NameToLayer ("Wall");
 		mask_Floor = 1 << LayerMask.NameToLayer ("Floor");
@@ -60,19 +60,11 @@ public class sc_character : MonoBehaviour {
 	}
 
 	#region 位移函式
-	public IEnumerator GoUpStairs(int floors, bool isRight, float Xpos){
-		if (isRight) {
-			while (floors > 0) {
-				yield return StartCoroutine (MoveToPos (new Vector2 (12.6f, 0)));
-				yield return StartCoroutine (MoveToPos (new Vector2 (17.65f, 0)));
-				floors--;
-			}
-		} else {
-			while (floors > 0) {
-				yield return StartCoroutine (MoveToPos (new Vector2 (-30.5f, 0)));
-				yield return StartCoroutine (MoveToPos (new Vector2 (-35.75f, 0)));
-				floors--;
-			}
+	public IEnumerator GoUpStairs(int floors, float Xpos){
+		while (floors > 0) {
+			yield return StartCoroutine (MoveToPos (new Vector2 (29.3f, 0)));
+			yield return StartCoroutine (MoveToPos (new Vector2 (24f, 0)));
+			floors--;
 		}
 		yield return StartCoroutine (MoveToPos (new Vector2 (Xpos, 0)));
 	}
@@ -314,18 +306,14 @@ public class sc_character : MonoBehaviour {
 	#endregion
 
 	#region 動畫相關
-	public void SetTalkAnim(string _animKey){
-		if(!(_animKey == "M0" && lastAnimKey == "M0"))
-			SetAnim (_animKey);
-		lastAnimKey = _animKey;
-  	}
-
 	public void SetAnim(string _animKey){
+		if (_animKey == "")
+			return;
 		anim.SetTrigger(_animKey);
 		//KM: No move anim. There is NM_frontIdle, NM_backIdle, NM_interact0, etc.
 		//PK: Parkour anim. Don't change spr flip
 		string keyTitle = _animKey.Split (new char[]{ '_' }) [0];
-		if (keyTitle == "NM" || keyTitle == "PK" || _animKey == "M0") {
+		if (keyTitle == "NM" || keyTitle == "PK") {
 			canMove = false;
 			MoveActivate (false, false);
 			if (keyTitle != "PK") {

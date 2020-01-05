@@ -4,9 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 
+public interface i_PlotFlag{
+	void FlagAdd (string _key);
+	void FlagRemove (string _key);
+}
+
 public class sc_DialogGod : MonoBehaviour {
-	//public string[] ReadFileNames;
 	public sc_Option scOpt;
+	public bool fastDial = false;
 
 	[SerializeField]
 	scriptable_story story;
@@ -15,9 +20,6 @@ public class sc_DialogGod : MonoBehaviour {
 	[System.NonSerialized]
 	public sc_player scPlayer;
 
-	GameObject myPlayer;
-	string[] textColumn;
-	bool hasTalked = false;
 	Dictionary<string, sc_NpcDialog> NPCs = new Dictionary<string, sc_NpcDialog>();
 	public Dictionary<string, string> Plot = new Dictionary<string, string>();
 	public Dictionary<string, DialogueSet> dc_dialogues = new Dictionary<string, DialogueSet> ();
@@ -25,19 +27,20 @@ public class sc_DialogGod : MonoBehaviour {
 	public Dictionary<string, List<DivergeUnit>> dc_diverges = new Dictionary<string, List<DivergeUnit>> ();
 
 	List<string> list_talkingNPC = new List<string>();
+	static List<i_PlotFlag> PF_Listener = new List<i_PlotFlag> ();
+	static List<string> PlotFlags = new List<string> ();
+
+	string[] textColumn;
+	bool hasTalked = false;
 
 	void Awake () {
-		myPlayer = GameObject.FindGameObjectWithTag ("Player");
+		GameObject myPlayer = GameObject.FindGameObjectWithTag ("Player");
 		scPlayer = myPlayer.GetComponent<sc_player> ();
 		scOpt = myPlayer.GetComponentInChildren<sc_Option>();
 		playerTR = myPlayer.transform;
-
+		PlotFlags.Clear ();
+		PF_Listener.Clear ();
 		ReadStoryAsset ();
-		/*
-		if (ReadFileNames.Length != 0) {
-			foreach (string _str in ReadFileNames)
-				ReadInOneFile (true, _str);
-		}*/
   	}
 
 	#region 讀入與儲存對話文件
@@ -176,10 +179,48 @@ public class sc_DialogGod : MonoBehaviour {
 	}
 	#endregion
 
-	#region 其他
+	#region NPC相關
 	public void NpcRegister (string _name, sc_NpcDialog _npcDial){ NPCs.Add (_name, _npcDial); }
 
 	public sc_NpcDialog GetNpcDialog(string name){ return NPCs [name]; }
+
+	public void RegTalkingNPC(bool registing, string _npcName, Transform _npcTR){
+		if (registing) {
+			if(!list_talkingNPC.Contains(_npcName))
+				list_talkingNPC.Add (_npcName);
+			scPlayer.ActiveControl (0, false);
+
+		} else {
+			if (list_talkingNPC.Contains(_npcName))
+				list_talkingNPC.Remove (_npcName);
+		}
+
+		if (list_talkingNPC.Count == 0) {
+			hasTalked = true;
+			scPlayer.ActiveControl (0, true);
+			sc_God.MainCam.scCam.SetFollowTarget (true);
+
+		} else if (list_talkingNPC.Count == 1) {
+			Transform nowNpcTR = NPCs [list_talkingNPC [0]].transform;
+			sc_God.MainCam.scCam.SetFollowTarget (playerTR, NPCs [list_talkingNPC [0]].transform, true);
+		} else if(list_talkingNPC.Count >= 2){
+			int count = list_talkingNPC.Count;
+			Transform t0 = NPCs [list_talkingNPC [count - 1]].transform;
+			Transform t1 = NPCs [list_talkingNPC [count - 2]].transform;
+			sc_God.MainCam.scCam.SetFollowTarget (t0, t1, true);
+		}
+
+	}
+
+	public int GetTalkingCount(){
+		return list_talkingNPC.Count;
+	}
+
+	public bool CheckDialogComplete(){
+		bool _talked = hasTalked;
+		hasTalked = false;
+		return _talked;
+	}
 	#endregion
 
 	#region 分歧點相關
@@ -219,7 +260,7 @@ public class sc_DialogGod : MonoBehaviour {
 				return false;
 			string[] possibleCases = conditionStr [1].Split (caseSpliter, System.StringSplitOptions.RemoveEmptyEntries);
 			foreach(string plotFlag in possibleCases){
-				if (sc_God.ContainsPF (plotFlag))
+				if (ContainsPF (plotFlag))
 					return true;
 			}
 		} else if (conditionStr [0] == "Else"){
@@ -240,45 +281,29 @@ public class sc_DialogGod : MonoBehaviour {
 		}
 		return false;
 	}
-	#endregion
+    #endregion
 
-	#region 讀取和設定對話狀態
-	public void RegTalkingNPC(bool registing, string _npcName, Transform _npcTR){
-		if (registing) {
-			if(!list_talkingNPC.Contains(_npcName))
-				list_talkingNPC.Add (_npcName);
-			scPlayer.ActiveControl (0, false);
+	#region PlotFlag相關
+	static public void RegisterListener(i_PlotFlag SPL){
+		PF_Listener.Add (SPL);
+	}
 
+	static public void SetPlotFlag(string _key, bool _isAdd){
+		if (_isAdd) {
+			if (!PlotFlags.Contains (_key))
+				PlotFlags.Add (_key);
+			foreach (i_PlotFlag PFL in PF_Listener)
+				PFL.FlagAdd (_key);
 		} else {
-			if (list_talkingNPC.Contains(_npcName))
-				list_talkingNPC.Remove (_npcName);
+			if (PlotFlags.Contains (_key))
+				PlotFlags.Remove (_key);
+			foreach (i_PlotFlag PFL in PF_Listener)
+				PFL.FlagRemove (_key);
 		}
-
-		if (list_talkingNPC.Count == 0) {
-			hasTalked = true;
-			scPlayer.ActiveControl (0, true);
-			sc_God.MainCam.scCam.SetFollowTarget (true);
-				
-		} else if (list_talkingNPC.Count == 1) {
-			Transform nowNpcTR = NPCs [list_talkingNPC [0]].transform;
-			sc_God.MainCam.scCam.SetFollowTarget (playerTR, NPCs [list_talkingNPC [0]].transform, true);
-		} else if(list_talkingNPC.Count >= 2){
-			int count = list_talkingNPC.Count;
-			Transform t0 = NPCs [list_talkingNPC [count - 1]].transform;
-			Transform t1 = NPCs [list_talkingNPC [count - 2]].transform;
-			sc_God.MainCam.scCam.SetFollowTarget (t0, t1, true);
-		}
-
 	}
 
-	public int GetTalkingCount(){
-		return list_talkingNPC.Count;
-	}
-
-	public bool CheckDialogComplete(){
-		bool _talked = hasTalked;
-		hasTalked = false;
-		return _talked;
+	static public bool ContainsPF(string _key){
+		return PlotFlags.Contains (_key);
 	}
 	#endregion
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class sc_talkNPC : sc_character {
+	public bool MovableCharacter = true;
 	[System.NonSerialized]
 	public sc_NpcDialog scDialog;
 	protected sc_player scPlayer;
@@ -82,7 +83,7 @@ public class sc_talkNPC : sc_character {
 				yield return StartCoroutine (MoveToPos (SplitVectorStr(funcVars[1])));
 				break;
 			case "GoStairs":
-				yield return StartCoroutine (GoUpStairs (int.Parse (funcVars [1]), bool.Parse (funcVars [2]), float.Parse (funcVars [3])));
+				yield return StartCoroutine (GoUpStairs (int.Parse (funcVars [1]), float.Parse (funcVars [2])));
 				break;
 			case "Face":
 				if (funcVars [1] == "right" || funcVars[1] == "Right")
@@ -176,7 +177,7 @@ public class sc_talkNPC : sc_character {
 				scPlayer.ActiveControl (int.Parse (funcVars [1]), bool.Parse (funcVars [2]));
 				break;
 			case "Plot":
-				sc_God.SetPlotFlag (funcVars [1], true);
+				sc_DialogGod.SetPlotFlag (funcVars [1], true);
 				break;
 			case "PlayerEle":
 				scPlayer.DoInteractable ();

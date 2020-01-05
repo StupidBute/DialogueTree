@@ -8,28 +8,27 @@ public class sc_Option : MonoBehaviour {
 	public int Answer = -1;
 	Camera cam;
 	Transform myPlayer;
-	GameObject[] myOptions = new GameObject[4];
-	GameObject optionLine;
+	GameObject[] myOptions = new GameObject[8];
 	Animator anim;
 	char[] optionSpliter = new char[]{'_'};
-	Text[] optionTxt = new Text[4];
+	Text[] optionTxt = new Text[8];
 	Vector2 originRectScale;
 	Coroutine lastCoroutine = null;
+	int baseIndex = 0;
 
 	void Start () {
 		cam = Camera.main;
 		myPlayer = transform.parent;
 		anim = GetComponent<Animator> ();
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 8; i++) {
 			myOptions [i] = transform.GetChild (i).gameObject;
 			optionTxt [i] = myOptions [i].GetComponentInChildren<Text> ();
 		}
 		originRectScale = myOptions [0].transform.localScale;
-		optionLine = transform.GetChild (4).gameObject;
 	}
 
 	public void ChooseAnswer(List<Option> lst_option){
-		transform.localPosition = new Vector2 (-1.22f, 2.42f);
+		transform.localPosition = new Vector2 (-2.17f, 1.72f);
 		lastCoroutine = StartCoroutine (IE_ChooseAnswer (lst_option));
 	}
 
@@ -44,24 +43,19 @@ public class sc_Option : MonoBehaviour {
 	IEnumerator IE_ChooseAnswer(List<Option> lst_option){
 		int index = -1;
 		int optionCount = lst_option.Count;
-
 		//打開選項
-		transform.localPosition = (myPlayer.position.x < cam.transform.position.x) ? 
+		bool isLeft = myPlayer.position.x < cam.transform.position.x;
+		transform.localPosition = isLeft ? 
 			new Vector2 (-Mathf.Abs (transform.localPosition.x), transform.localPosition.y) 
 			: new Vector2 (Mathf.Abs (transform.localPosition.x), transform.localPosition.y);
-
-		optionLine.SetActive(true);
-		for (int i = 0; i < 4; i++) {
-			optionTxt [i].color = new Color(1, 1, 1, 0);
-			if (i < optionCount) {
-				optionTxt [i].text = lst_option [i].text;
-				myOptions [i].SetActive (true);
-			}else
-				myOptions [i].SetActive (false);
+		baseIndex = isLeft ? 0 : 4;
+		for (int i = 0; i < lst_option.Count; i++) {
+			optionTxt [baseIndex + i].text = lst_option [i].text;
+			myOptions [baseIndex + i].SetActive (true);
 		}
 		anim.SetBool ("activate", true);
-		yield return new WaitForSeconds (0.45f);
-		yield return StartCoroutine (FadeTxt (true));
+		yield return new WaitForSeconds (0.8f);
+		anim.enabled = false;
 
 		#region 選選項
 		GameObject pointedOption = null;
@@ -75,40 +69,29 @@ public class sc_Option : MonoBehaviour {
 					index = int.Parse (pointedOption.name.Split (optionSpliter) [0]);
 				else
 					ScaleOptions(pointedOption.transform);
-			}else{
+			}else
 				ScaleOptions();
-			}
 
 			yield return null;
 		}
 		for(int i = 0; i < 4; i++)
 			myOptions[i].transform.DOScale(originRectScale, 0.3f);
+		anim.enabled = true;
 		anim.SetBool ("activate", false);
-		yield return StartCoroutine (FadeTxt (false));
 		yield return new WaitForSeconds (0.5f);
 		#endregion
 
 		//關閉全部選項
-		optionLine.SetActive(false);
 		for (int i = 0; i < 4; i++)		
-			myOptions [i].SetActive (false);
+			myOptions [baseIndex + i].SetActive (false);
 		Answer = index;
 	}
 
-	IEnumerator FadeTxt(bool _fadeIn){
-		Sequence seq = DOTween.Sequence ();
-		float targetAlpha = _fadeIn ? 1f : 0f;
-		seq.Append (optionTxt [0].DOFade (targetAlpha, 0.25f)).Join (optionTxt [1].DOFade (targetAlpha, 0.25f))
-			.Join (optionTxt [2].DOFade (targetAlpha, 0.25f)).Join (optionTxt [3].DOFade (targetAlpha, 0.25f));
-		yield return seq.WaitForCompletion ();
-	}
-
-
 	void ScaleOptions(Transform selected){
-		Vector2 bigScale = 1.2f * originRectScale;
+		Vector2 bigScale = 1.1f * originRectScale;
 
 		for (int i = 0; i < 4; i++) {
-			Transform nowTR = myOptions [i].transform;
+			Transform nowTR = myOptions [baseIndex + i].transform;
 			if (nowTR == selected) {
 				float dScale = bigScale.x - nowTR.localScale.x;
 				if (dScale > 0f) {
@@ -130,7 +113,7 @@ public class sc_Option : MonoBehaviour {
 
 	void ScaleOptions(){
 		for (int i = 0; i < 4; i++) {
-			Transform nowTR = myOptions [i].transform;
+			Transform nowTR = myOptions [baseIndex + i].transform;
 			float dScale = originRectScale.x - nowTR.localScale.x;
 			if (dScale < 0f) {
 				float scaleSpd = (0.1f + Mathf.Abs(dScale * 9f)) * Time.deltaTime;

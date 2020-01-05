@@ -29,8 +29,7 @@ public class sc_player : sc_character {
 	public void DoInteractable(){
 		RaycastHit hit;
 		if (Physics.Raycast (transform.position, Vector3.up, out hit, 2f, mask_Interactable)) {
-			i_Interactable _hitIterface;
-			_hitIterface = hit.collider.GetComponent<i_Interactable> ();
+			i_Interactable _hitIterface = hit.collider.GetComponent<i_Interactable> ();
 			if (_hitIterface != null)
 				_hitIterface.Interacted ();
 			else

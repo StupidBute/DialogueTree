@@ -70,7 +70,7 @@ public class sc_Interactable : MonoBehaviour {
 		}
 
 		if(plotKey != "")
-			sc_God.SetPlotFlag (plotKey, true);
+			sc_DialogGod.SetPlotFlag (plotKey, true);
 		
 		scPlayer.ActiveControl (1, true);
 		yield break;
