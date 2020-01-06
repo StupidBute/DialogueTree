@@ -33,7 +33,16 @@ public class sc_Interactable : MonoBehaviour {
 	virtual protected void Start () {
 		scPlayer = sc_AICenter.AI.GetPlayerSC ();
 		scCam = sc_God.MainCam.scCam;
-		anim_EHint = GetComponentInChildren<Animator> ();
+		for (int i = 0; i < transform.childCount; i++) {
+			Transform nowChild = transform.GetChild (i);
+			if (nowChild.tag == "Tag_EHint") {
+				anim_EHint = nowChild.GetComponent<Animator> ();
+				break;
+			}
+		}
+		if (anim_EHint == null)
+			anim_EHint = GetComponentInChildren<Animator> ();
+		
 		playerMask = 1 << LayerMask.NameToLayer ("Player");
 	}
 

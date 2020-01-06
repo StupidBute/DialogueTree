@@ -94,15 +94,14 @@ public class sc_NpcDialog : MonoBehaviour {
 
 	void StartNextDialogue(string _key){
 		if(_key != "END") {
-			_key = scGod.DoDiverge(_key);
+			scGod.StartNpcDialogue(_key);
+
+			_key = scGod.DoDiverge (_key);
 			char[] splitter = new char[]{':'};
 			string[] keyStr = _key.Split(splitter);
-			string nextnextKey = scGod.StartNpcDialogue(_key);
-
 			//若下一句不是自己講的
 			if(keyStr[0] != myName){
-				keyStr = nextnextKey.Split (splitter);	//檢查下下一句是否是自己講的，是則啟用REST狀態，否則關閉對話框
-				if(keyStr[0] == myName)
+				if(scGod.FindCharacterDialogue(myName, _key))
 					StartCoroutine(IE_TalkDialog(new Dialog ("", 12, "REST", "..."), false));
 				else
 					StartCoroutine (IE_AnimOpenDialog (animType.End, 0f, 0f, null));
@@ -340,10 +339,10 @@ public class sc_NpcDialog : MonoBehaviour {
 				}
 					
 				break;
-			case "Anim"://Anim(target,key)
-				if (funcStr.Length != 3)
+			case "Anim"://Anim(key)
+				if (funcStr.Length != 2)
 					return;
-				scGod.GetNpcDialog (funcStr [1]).SetTalkAnim (funcStr [2]);
+				owner.SetTalkAnim (funcStr [1]);
 				break;
 			case "BoxSide":		//BoxSide(Right) or BoxSide(Left)
 				if (funcStr [1] == "Right")

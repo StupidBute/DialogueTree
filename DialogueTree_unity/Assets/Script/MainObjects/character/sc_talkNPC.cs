@@ -21,19 +21,16 @@ public class sc_talkNPC : sc_character {
 
 	#region 其他等待函式
 	//等玩家靠近
-	/*
-	protected IEnumerator CheckPlayer(string dialKey, float checkDistance){
+
+	protected IEnumerator CheckPlayer(string plotKey, float checkDistance){
 		if (checkDistance < 0f)
 			checkDistance = 2.2f;
 		WaitForSeconds nextCheckTime = new WaitForSeconds (0.1f);
-		while (Vector2.Distance (playerTR.position, transform.position) > checkDistance || Mathf.Abs(playerTR.position.z - transform.position.z) > 1.5f) {
+		while (Vector2.Distance (playerTR.position, transform.position) > checkDistance) {
 			yield return nextCheckTime;
 		}
-		if (dialKey == "")
-			scDialog.RunSheet ();
-		else
-			scDialog.StartSheetAt (dialKey);
-	}*/
+		scDialog.scGod.StartPlot (plotKey);
+	}
 	//面對目標
 	public IEnumerator FaceTarget(Transform target){
 		int faceNum = transform.position.x < target.position.x ? 1 : -1;
@@ -56,8 +53,8 @@ public class sc_talkNPC : sc_character {
 		float _dy = Mathf.Abs (_pos.y - targetTR.position.y);
 		float _dx = _pos.x - targetTR.position.x;
 		float originDirect = Mathf.Sign(_dx);
-		while (!(_dy < 0.5f && Mathf.Abs (_dx) < 0.04f)) {
-			if (_dy <= 0.5f && _dx * originDirect < 0f)
+		while (!(_dy < 1f && Mathf.Abs (_dx) < 0.04f)) {
+			if (_dy <= 1f && _dx * originDirect < 0f)
 				break;
 			yield return _waitCheckTime;
 			_dy = Mathf.Abs (_pos.y - targetTR.position.y);
@@ -68,22 +65,18 @@ public class sc_talkNPC : sc_character {
 	#endregion
 
 	#region NPC_Sequence
-	public void StartTalkNpcSequence(string[] array_function){
-		StartCoroutine (IE_TalkNpcSequence (array_function));
+	public Coroutine StartTalkNpcSequence(string[] array_function){
+		return StartCoroutine (IE_TalkNpcSequence (array_function));
 	}
 
 	IEnumerator IE_TalkNpcSequence(string[] array_function){
 		char[] funcSpliter = new char[]{ '(', ',', ')' };
-
 
 		foreach(string functionUnit in array_function){
 			string[] funcVars = functionUnit.Split (funcSpliter, System.StringSplitOptions.RemoveEmptyEntries);
 			switch (funcVars [0]) {
 			case "Move":
 				yield return StartCoroutine (MoveToPos (SplitVectorStr(funcVars[1])));
-				break;
-			case "GoStairs":
-				yield return StartCoroutine (GoUpStairs (int.Parse (funcVars [1]), float.Parse (funcVars [2])));
 				break;
 			case "Face":
 				if (funcVars [1] == "right" || funcVars[1] == "Right")
@@ -105,13 +98,10 @@ public class sc_talkNPC : sc_character {
 				else
 					scDialog.isRightBox = false;
 				break;
-				/*
 			case "CheckPlayer":
 				if(funcVars.Length == 3)
 					yield return StartCoroutine (CheckPlayer (funcVars [1], float.Parse (funcVars [2])));
-				else
-					yield return StartCoroutine (CheckPlayer ("", float.Parse (funcVars [1])));
-				break;*/
+				break;
 			case "Wait":
 				yield return new WaitForSeconds (float.Parse (funcVars [1]));
 				break;
@@ -151,13 +141,10 @@ public class sc_talkNPC : sc_character {
 				}
 					
 				break;
-				/*
 			case "Talk":
 				if (funcVars.Length == 1)
-					scDialog.RunSheet ();
-				else
-					scDialog.StartSheetAt (funcVars[1]);
-				break;*/
+					scDialog.scGod.StartPlot (funcVars[1]);
+				break;
 			case "Anim":
 				SetAnim (funcVars [1]);
 				break;

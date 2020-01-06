@@ -16,7 +16,6 @@ public class sc_CamFollow : MonoBehaviour {
 
 	sc_AICenter AI;
 	Transform playerTR;
-	Transform camTR;
 	List<Transform> followTR = new List<Transform>();
 	Camera cam;
 	Image[] focusBlack;
@@ -27,7 +26,6 @@ public class sc_CamFollow : MonoBehaviour {
 	Coroutine lastCo = null;
 
 	bool freeCamera = false;
-	bool isParkourCam = false;
 	float moveSpd = 0f;
 	float ResolutionAdjust = 1f;
 
@@ -41,15 +39,11 @@ public class sc_CamFollow : MonoBehaviour {
 		AI = sc_AICenter.AI;
 		playerTR = AI.GetPlayerTR ();
 		followTR.Add(playerTR);
-		cam = Camera.main;
-		if (cam.transform.parent != null)
-			camTR = cam.transform.parent;
-		else
-			camTR = cam.transform;
 		focusBlack = GetComponentsInChildren<Image> ();
 		StartCoroutine (ActiveFocusBlack (false, 0f));
 
 		#region 處理不同比例解析度
+		cam = Camera.main;
 		if(cam.aspect < 1.7f){
 			float expectedHeight = Screen.width / 1.7f;
 			ResolutionAdjust = expectedHeight / Screen.height;
@@ -57,7 +51,6 @@ public class sc_CamFollow : MonoBehaviour {
 			SetFocusBlack(0f, 1f);
 		}
 		#endregion
-
 	}
 
 	void Update () {
@@ -65,14 +58,14 @@ public class sc_CamFollow : MonoBehaviour {
 			if (followTR.Count > 0) {
 				Vector2 targetPos = CalculateTargetPos ();
 				float targetSpd = 0f;
-				float dist = Vector2.Distance (targetPos, (Vector2)camTR.position);
-				float dx = targetPos.x - camTR.position.x;
-				float dy = targetPos.y - camTR.position.y;
+				float dist = Vector2.Distance (targetPos, (Vector2)transform.position);
+				float dx = targetPos.x - transform.position.x;
+				float dy = targetPos.y - transform.position.y;
 				float angle = Mathf.Atan2(dy, dx);
 				if (Mathf.Abs (dist) > 0.05f) {
 					targetSpd = dist * followSpd;
 					SmoothCamSpd (targetSpd);
-					camTR.Translate (moveSpd * Mathf.Cos (angle) * Time.deltaTime, 
+					transform.Translate (moveSpd * Mathf.Cos (angle) * Time.deltaTime, 
 						moveSpd * Mathf.Sin (angle) * Time.deltaTime, 0, 
 						Space.World);
 				} else
@@ -80,7 +73,6 @@ public class sc_CamFollow : MonoBehaviour {
 					
 			}
 		}
-		
 	}
 
 	Vector2 CalculateTargetPos(){
@@ -108,23 +100,6 @@ public class sc_CamFollow : MonoBehaviour {
 			else
 				moveSpd += AccSpd * Time.deltaTime;
 		}
-	}
-
-	public void CamParkour(bool _activate){
-		if (_activate) {
-			if (!isParkourCam) {
-				isParkourCam = true;
-				OrthoSizeCamera (camSize * parkourScale, 0.5f);
-				parkourEffect.SetActive (true);
-			}
-		} else {
-			if (isParkourCam) {
-				isParkourCam = false;
-				OrthoSizeCamera (camSize, 0.5f);
-				parkourEffect.SetActive (false);
-			}
-		}
-
 	}
 	public void ParkourEffect(bool _activate){
 		parkourEffect.SetActive (_activate);
@@ -199,11 +174,12 @@ public class sc_CamFollow : MonoBehaviour {
 
 		freeCamera = true;
 		Vector3 cam_pos = new Vector3 (_pos.x, _pos.y, -10);
+		cam.DOOrthoSize (_size / ResolutionAdjust, _time);
 		lastSeq = DOTween.Sequence();
+		lastSeq.Append (cam.DOOrthoSize (_size / ResolutionAdjust, _time))
+			.Join (transform.DOMove (cam_pos, _time, false));
 
-		Ease easeType = _size < 6f ? Ease.OutCubic : Ease.OutQuint;
-		lastSeq.Append (cam.DOOrthoSize (_size / ResolutionAdjust, _time).SetEase (easeType))
-			.Join (camTR.DOMove (cam_pos, _time, false).SetEase (easeType));
+
 	}
 
 	public void SetCamSize(float _size){

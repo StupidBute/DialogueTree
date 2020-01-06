@@ -60,37 +60,32 @@ public class sc_character : MonoBehaviour {
 	}
 
 	#region 位移函式
-	public IEnumerator GoUpStairs(int floors, float Xpos){
-		while (floors > 0) {
-			yield return StartCoroutine (MoveToPos (new Vector2 (29.3f, 0)));
-			yield return StartCoroutine (MoveToPos (new Vector2 (24f, 0)));
-			floors--;
+	public IEnumerator MoveToPos(Vector2 pos){
+		float dy = pos.y - transform.position.y;
+		//不同層
+		while(Mathf.Abs(dy) > 2f){
+			yield return StartCoroutine (HorizontalMove (29.3f));
+			yield return StartCoroutine (HorizontalMove (24f));
+			dy = pos.y - transform.position.y;
 		}
-		yield return StartCoroutine (MoveToPos (new Vector2 (Xpos, 0)));
+		//同一層
+		yield return StartCoroutine (HorizontalMove (pos.x));
 	}
 
-	public IEnumerator MoveToPos(Vector2 _pos){
-		float _dx = _pos.x - transform.position.x;
-		float _dy = _pos.y - transform.position.y;
-
-		//不同層
-		if(Mathf.Abs(_dy) > 0.8f){
-			//sc_AICenter.AI.
-		}
-
-		//同一層
-		if (_dx > 0) {
-			while (_dx > 0 && canMove) {
+	IEnumerator HorizontalMove(float posX){
+		float dx = posX - transform.position.x;
+		if (dx > 0) {
+			while (dx > 0 && canMove) {
 				if (Right == false)
 					SetMove (true, false);
-				_dx = _pos.x - transform.position.x;
+				dx = posX - transform.position.x;
 				yield return null;
 			}
 		} else {
-			while (_dx <= 0 && canMove) {
+			while (dx <= 0 && canMove) {
 				if(Left == false)
 					SetMove (false, true);
-				_dx = _pos.x - transform.position.x;
+				dx = posX - transform.position.x;
 				yield return null;
 			}
 		}

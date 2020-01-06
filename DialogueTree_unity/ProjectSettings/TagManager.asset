@@ -6,6 +6,7 @@ TagManager:
   tags:
   - God
   - Tag_Stairs
+  - Tag_EHint
   layers:
   - Default
   - TransparentFX

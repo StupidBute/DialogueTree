@@ -84,7 +84,7 @@ public class sc_Area : MonoBehaviour {
 			if (Physics.Raycast (playerTR.position + Vector3.right * 0.3f, Vector3.right, out hit, 10, areaMask)) {
 				nowForceMove = true;
 				scPlayer.ActiveControl (1, false);
-				if (hit.distance > 1.7f) {
+				if (hit.distance > 1f) {
 					yield return StartCoroutine (scPlayer.MoveToPos (new Vector2 (playerTR.position.x + 0.8f, playerTR.position.y)));
 					playerTR.Translate (hit.distance - 1f, 0, 0);
 					scPlayer.SnapFloor (2);

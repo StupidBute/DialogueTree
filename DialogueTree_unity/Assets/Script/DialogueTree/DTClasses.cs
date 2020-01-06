@@ -239,7 +239,7 @@ public class DialogueNode : Node{
 		defaultName = "新對話集";
 		SetName (defaultName);
 		myCharacter = DTGod.lst_chars [0];
-		lst_dial.Add (new Dialog ("idle", 12, "X", ""));
+		lst_dial.Add (new Dialog ("", 12, "", ""));
 	}
 
 	override public void DrawSelf(Vector2 coordinate){
@@ -253,7 +253,7 @@ public class DialogueNode : Node{
 
 public class QuestionNode : Node{
 	public Character myCharacter;
-	public Dialog questionDial = new Dialog ("idle", 12, "X", "");
+	public Dialog questionDial = new Dialog ("", 12, "", "");
 	public List<SubNode> options = new List<SubNode> ();
 	Rect rect_tag = new Rect (3, 3, 94, 22);
 	Rect rect_name = new Rect (3, 3, 70, 24);
@@ -1012,7 +1012,7 @@ public class RightPanel{
 				DrawDialogue (n.lst_dial [i], "對話" + i.ToString ());
 			}
 			if (GUI.Button (new Rect (10, contentRect.height, 230, 40), "新增對話", style_button))
-				n.lst_dial.Add (new Dialog ("idle", 12, "X", ""));
+				n.lst_dial.Add (new Dialog ("", 12, "", ""));
 			contentRect.height += 50;
 		}
 	}
@@ -1240,7 +1240,7 @@ public class RightPanel{
 		GenericMenu menu = new GenericMenu ();
 		menu.AddItem (new GUIContent ("刪除"), false, () => n.lst_dial.RemoveAt (index));
 		menu.AddItem (new GUIContent ("插入新對話"), false, 
-			() => n.lst_dial.Insert (index + 1, new Dialog ("idle", 12, "X", "")));
+			() => n.lst_dial.Insert (index + 1, new Dialog ("", 12, "", "")));
 		menu.ShowAsContext ();
 	}
 	#endregion

@@ -46,7 +46,7 @@ public class sc_DialogGod : MonoBehaviour {
 	#region 讀入與儲存對話文件
 	void ReadStoryAsset(){
 		if (story == null)
-			return;
+			story = Resources.Load<scriptable_story> ("DemoStory");
 		foreach (StartNodeInfo info in story.lst_startNodeInfo)
 			Plot.Add (info.name, info.nextKey);
 		foreach (DialogueNodeInfo info in story.lst_dialogueNodeInfo)
@@ -164,18 +164,35 @@ public class sc_DialogGod : MonoBehaviour {
 		StartNpcDialogue (Plot [_plotName]);
 	}
 
-	public string StartNpcDialogue(string _key){
+	public void StartNpcDialogue(string _key){
 		_key = DoDiverge (_key);
 		char[] splitter = new char[]{ ':' };
 		string[] str = _key.Split (splitter, System.StringSplitOptions.RemoveEmptyEntries);
-		if (dc_dialogues.ContainsKey (_key)) {
+		if (dc_dialogues.ContainsKey (_key))
 			NPCs [str [0]].StartDialogue (dc_dialogues [_key]);
-			return dc_dialogues [_key].nextKey;
-		} else if (dc_questions.ContainsKey (_key)) {
+		else if (dc_questions.ContainsKey (_key)) 
 			NPCs [str [0]].StartDialogue (dc_questions [_key]);
-			return dc_questions [_key].options [0].nextKey;
-		}else
-			return "END";
+		else
+			return;
+	}
+
+	public bool FindCharacterDialogue(string charName, string _nextKey){
+		if (dc_diverges.ContainsKey(_nextKey))
+			return FindCharacterDialogue (charName, dc_diverges [_nextKey] [0].nextKey);
+
+		char[] splitter = new char[]{ ':' };
+		if (dc_dialogues.ContainsKey (_nextKey)) {
+			if (dc_dialogues [_nextKey].nextKey.Split (splitter) [0] == charName)
+				return true;
+			else
+				return FindCharacterDialogue (charName, dc_dialogues [_nextKey].nextKey);
+		} else if (dc_questions.ContainsKey (_nextKey)) {
+			if (dc_questions [_nextKey].options [0].nextKey.Split (splitter) [0] == charName)
+				return true;
+			else
+				return FindCharacterDialogue (charName, dc_questions [_nextKey].options [0].nextKey);
+		} else
+			return false;
 	}
 	#endregion
 
