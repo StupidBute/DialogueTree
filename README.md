@@ -1,4 +1,4 @@
-DialogueTree圖形化對話編輯器
+DialogueTree圖形化對話編輯器(附《沉沒意志》Demo版本)
 =====
 
 ## 前言
@@ -10,6 +10,9 @@ DialogueTree圖形化對話編輯器
 ## 介紹
 遊戲對話系統的圖形化編輯器\
 可用樹狀節點的結構來編輯有多條分歧路線的遊戲劇情對話\
+利用顏色標示不同種類的節點與對話npc，並利用曲線箭頭連結各分支路線，讓對話流程一目了然。\
+
+
 此編輯器在工具列的目錄為Window/Dialogue Tree\
 ![image](https://github.com/StupidBute/DialogueTree/blob/master/DialogueTree0.jpg)
 上圖的檔案在此專案檔中的位址為Assets/Resources/DemoStory，可用編輯器左下角的開啟按鈕開啟。\
